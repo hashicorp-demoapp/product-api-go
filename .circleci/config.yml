@@ -7,8 +7,7 @@ jobs:
       GO111MODULE: "on"
     working_directory: /go/src/github.com/hashicorpdemoapp/product-api-go
     steps:
-      - attach_workspace:
-          at: /go/src/github.com/hashicorpdemoapp
+      - checkout
       - run:
           name: test application
           command: go test -v ./...
