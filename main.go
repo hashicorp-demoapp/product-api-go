@@ -8,6 +8,10 @@ import (
 	"net/http"
 )
 
+// Config format for application
+var Config struct {
+}
+
 func main() {
 
 	l := hclog.Default()

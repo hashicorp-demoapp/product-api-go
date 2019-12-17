@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/fsnotify/fsnotify"
 )
@@ -24,6 +25,9 @@ type File struct {
 func New(filepath string, c interface{}, updated func()) (*File, error) {
 	f := &File{path: filepath, userConfig: c, updated: updated}
 	go f.watch(filepath)
+
+	// sleep to allow the watch to setup
+	time.Sleep(10 * time.Millisecond)
 
 	return f, f.loadData()
 }
@@ -49,9 +53,7 @@ func (f *File) loadData() error {
 	defer cf.Close()
 
 	jd := json.NewDecoder(cf)
-	jd.Decode(f.userConfig)
-
-	return nil
+	return jd.Decode(f.userConfig)
 }
 
 // watch a file for changes
@@ -71,7 +73,12 @@ func (f *File) watch(filepath string) {
 				if !ok {
 					return
 				}
-				if event.Op&fsnotify.Write == fsnotify.Write || event.Op&fsnotify.Create == fsnotify.Create {
+				// running on Docker we are not going to reliably get the Write or create event
+				if event.Op&fsnotify.Write == fsnotify.Write ||
+					event.Op&fsnotify.Create == fsnotify.Create ||
+					event.Op&fsnotify.Rename == fsnotify.Rename ||
+					event.Op&fsnotify.Remove == fsnotify.Remove ||
+					event.Op&fsnotify.Chmod == fsnotify.Chmod {
 					err := f.loadData()
 					if err != nil {
 						log.Println("error", err)
