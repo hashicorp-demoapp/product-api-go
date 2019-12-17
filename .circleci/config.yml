@@ -9,6 +9,9 @@ jobs:
     steps:
       - checkout
       - run:
+          name: install dependencies
+          command: go get -u golang.org/x/sys/...
+      - run:
           name: test application
           command: go test -v ./...
       - run:
