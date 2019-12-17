@@ -47,7 +47,7 @@ jobs:
   publish-github-release:
     docker:
       - image: cibuilds/github:0.10
-    working_directory: ~/go/src/github.com/hashicorpdemoapp/product-api
+    working_directory: ~/go/src/github.com/hashicorpdemoapp/product-api-go
     steps:
       - attach_workspace:
           at: ~/go/src/github.com/hashicorpdemoapp
