@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 
@@ -29,6 +30,13 @@ func New(filepath string, c interface{}, updated func()) (*File, error) {
 
 // Close the FileConfig and remove all watchers
 func (f *File) Close() {
+	// watcher.Close can cause panic when running on CI in tests
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("Recovered in f", r)
+		}
+	}()
+
 	f.watcher.Close()
 }
 
