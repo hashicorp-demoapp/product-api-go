@@ -71,7 +71,7 @@ func TestLoadsConfigIntoStructOnChange(t *testing.T) {
 
 	assert.Eventually(t,
 		func() bool {
-			return tc.Name == "Erik"
+			return tc != nil && tc.Name == "Erik"
 		}, 10*time.Second, 10*time.Millisecond,
 	)
 }
@@ -91,6 +91,6 @@ func TestCallsUpdateOnChange(t *testing.T) {
 	assert.Eventually(t,
 		func() bool {
 			return updated
-		}, 2*time.Second, 10*time.Millisecond,
+		}, 10*time.Second, 10*time.Millisecond,
 	)
 }
