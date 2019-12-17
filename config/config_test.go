@@ -1,12 +1,12 @@
 package config
 
 import (
-	"github.com/stretchr/testify/assert"
-	"golang.org/x/xerrors"
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	"golang.org/x/xerrors"
 )
 
 type testConfig struct {
@@ -14,7 +14,8 @@ type testConfig struct {
 }
 
 func setupTests(t *testing.T) string {
-	f, err := ioutil.TempFile("", "*.json")
+	os.Remove("/tmp/config.json")
+	f, err := os.OpenFile("/tmp/config.json", os.O_CREATE|os.O_RDWR, 0666)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -22,7 +23,7 @@ func setupTests(t *testing.T) string {
 
 	f.WriteString(`{"Name": "Nic"}`)
 
-	return f.Name()
+	return "/tmp/config.json"
 }
 
 func modifyFile(f string, data string) error {

@@ -10,3 +10,6 @@ build_linux:
 
 build_docker: build_linux
 	docker build -t ${CONTAINER_NAME}:${CONTAINER_VERSION} .
+
+push_docker: build_docker
+	docker push ${CONTAINER_NAME}:${CONTAINER_VERSION}
