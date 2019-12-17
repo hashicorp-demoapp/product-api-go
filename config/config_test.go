@@ -72,7 +72,7 @@ func TestLoadsConfigIntoStructOnChange(t *testing.T) {
 	assert.Eventually(t,
 		func() bool {
 			return tc.Name == "Erik"
-		}, 2*time.Second, 10*time.Millisecond,
+		}, 10*time.Second, 10*time.Millisecond,
 	)
 }
 
