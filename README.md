@@ -4,5 +4,10 @@
 
 Products API written in Go
 
+## Docker images
+
+[https://hub.docker.com/r/hashicorpdemoapp/product-api/tags](https://hub.docker.com/r/hashicorpdemoapp/product-api/tags)
+
 ## Release process
+
 Pushing a new tag to Github will trigger a release on CircleCI
