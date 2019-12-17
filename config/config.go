@@ -82,6 +82,7 @@ func (f *File) watch(filepath string) {
 					err := f.loadData()
 					if err != nil {
 						log.Println("error", err)
+						return
 					}
 
 					if f.updated != nil {
