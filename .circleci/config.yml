@@ -22,7 +22,7 @@ jobs:
           paths:
             - product-api-go
 
-  release:
+  publish-docker-release:
     docker:
       - image: circleci/golang:1.13
     environment:
@@ -42,12 +42,12 @@ jobs:
       - run:
           name: docker push
           command: |
-            docker push hashicorpdemoapp/product-api:${CIRCLE_TAG} .
+            docker push hashicorpdemoapp/product-api:${CIRCLE_TAG}
 
   publish-github-release:
     docker:
       - image: cibuilds/github:0.10
-    working_directory: ~/go/src/github.com/hashicorpdemoapp/product-api
+    working_directory: ~/go/src/github.com/hashicorpdemoapp/product-api-go
     steps:
       - attach_workspace:
           at: ~/go/src/github.com/hashicorpdemoapp
@@ -64,7 +64,7 @@ workflows:
           filters:
             tags:
               only: /.*/
-      - release:
+      - publish-docker-release:
           requires:
             - build-go
           filters:
