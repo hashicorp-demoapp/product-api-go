@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/hashicorp-demoapp/product-api-go/data"
 	"github.com/hashicorp-demoapp/product-api-go/telemetry"
 	"github.com/hashicorp/go-hclog"
 )
@@ -12,19 +13,26 @@ import (
 type Health struct {
 	logger    hclog.Logger
 	telemetry *telemetry.Telemetry
+	db        data.Connection
 }
 
 // NewHealth creates a new Health handler
-func NewHealth(t *telemetry.Telemetry, l hclog.Logger) *Health {
+func NewHealth(t *telemetry.Telemetry, l hclog.Logger, db data.Connection) *Health {
 	t.AddMeasure("health.call")
 
-	return &Health{l, t}
+	return &Health{l, t, db}
 }
 
 // Handle the request
 func (h *Health) Handle(rw http.ResponseWriter, r *http.Request) {
 	done := h.telemetry.NewTiming("health.call")
 	defer done()
+
+	_, err := h.db.IsConnected()
+	if err != nil {
+		rw.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(rw, "error %s", err)
+	}
 
 	fmt.Fprintf(rw, "%s", "ok")
 }

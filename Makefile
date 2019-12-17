@@ -1,5 +1,5 @@
 CONTAINER_NAME=hashicorpdemoapp/product-api
-CONTAINER_VERSION=latest
+CONTAINER_VERSION=v0.0.4
 
 # Run tests continually with  a watcher
 autotest:

@@ -1,0 +1,3 @@
+{
+  "db_connection": "host=postgres port=3434 user=nic password=password dbname=wizzard sslmode=disable"
+}
