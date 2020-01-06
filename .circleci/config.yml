@@ -43,6 +43,28 @@ jobs:
           name: docker push
           command: |
             docker push hashicorpdemoapp/product-api:${CIRCLE_TAG}
+  
+  publish-docker-db-release:
+    docker:
+      - image: circleci/golang:1.13
+    environment:
+      GO111MODULE: "on"
+    working_directory: /go/src/github.com/hashicorpdemoapp/product-api-go
+    steps:
+      - setup_remote_docker
+      - attach_workspace:
+          at: /go/src/github.com/hashicorpdemoapp
+      - run:
+          name: docker login
+          command: docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}
+      - run:
+          name: docker build
+          command: |
+            cd database && docker build -t hashicorpdemoapp/product-api-db:${CIRCLE_TAG} .
+      - run:
+          name: docker push
+          command: |
+            docker push hashicorpdemoapp/product-api-db:${CIRCLE_TAG}
 
   publish-github-release:
     docker:
@@ -65,6 +87,14 @@ workflows:
             tags:
               only: /.*/
       - publish-docker-release:
+          requires:
+            - build-go
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
+      - publish-docker-db-release:
           requires:
             - build-go
           filters:
