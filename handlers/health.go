@@ -23,8 +23,8 @@ func NewHealth(t *telemetry.Telemetry, l hclog.Logger, db data.Connection) *Heal
 	return &Health{l, t, db}
 }
 
-// Handle the request
-func (h *Health) Handle(rw http.ResponseWriter, r *http.Request) {
+// ServeHTTP implements the handler interface
+func (h *Health) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	done := h.telemetry.NewTiming("health.call")
 	defer done()
 

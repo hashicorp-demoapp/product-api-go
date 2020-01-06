@@ -52,10 +52,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	healthHandler := handlers.NewHealth(t, logger, db)
-
 	r := mux.NewRouter()
-	r.HandleFunc("/health", healthHandler.Handle).Methods("GET")
+	
+	healthHandler := handlers.NewHealth(t, logger, db)
+	r.Handle("/health", healthHandler).Methods("GET")
+
+	coffeeHandler := handlers.NewCoffee(db, logger)
+	r.Handle("/coffee", coffeeHandler).Methods("GET")
 
 	http.ListenAndServe(":9090", r)
 }
