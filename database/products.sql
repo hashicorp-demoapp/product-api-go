@@ -1,6 +1,7 @@
 CREATE TABLE coffees (id serial PRIMARY KEY, name VARCHAR (255) NOT NULL, price NUMERIC(5, 2) NOT NULL, created_at TIMESTAMP NOT NULL, updated_at TIMESTAMP NOT NULL, deleted_at TIMESTAMP);
 CREATE TABLE ingredients (id serial PRIMARY KEY, name VARCHAR (255) NOT NULL, quantity VARCHAR (50) NOT NULL, created_at TIMESTAMP NOT NULL, updated_at TIMESTAMP NOT NULL, deleted_at TIMESTAMP);
-CREATE TABLE coffee_ingredients (id serial PRIMARY KEY, coffee_id int NOT NULL, ingredient_id int NOT NULL, created_at TIMESTAMP NOT NULL, updated_at TIMESTAMP NOT NULL, deleted_at TIMESTAMP);
+CREATE TABLE coffee_ingredients (id serial PRIMARY KEY, coffee_id int references coffees(id), ingredient_id int NOT references ingredients(id), created_at TIMESTAMP NOT NULL, updated_at TIMESTAMP NOT NULL, deleted_at TIMESTAMP);
+
 
 INSERT INTO ingredients (id, name, quantity, created_at, updated_at) VALUES (1, 'Double shot espresso', '20ml', CURRENT_DATE, CURRENT_DATE);
 INSERT INTO ingredients (id, name, quantity, created_at, updated_at) VALUES (2, 'Semi skimmed Milk', '500ml', CURRENT_DATE, CURRENT_DATE);

@@ -19,6 +19,8 @@ type PostgresSQL struct {
 // New creates a new connection to the database
 func New(connection string) (Connection, error) {
 	db, err := gorm.Open("postgres", connection)
+	db.LogMode(true)
+
 	//db, err := sql.Open("postgres", connection)
 	if err != nil {
 		return nil, err

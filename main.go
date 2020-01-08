@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"time"
 	"os"
 
 	"github.com/nicholasjackson/env"
@@ -46,9 +47,9 @@ func main() {
 	defer c.Close()
 
 	// load the db connection
-	db, err := data.New(conf.DBConnection)
+	db, err := retryDBUntilReady()
 	if err != nil {
-		logger.Error("Unable to connect to database", "error", err)
+		logger.Error("Timeout waiting for database connection")
 		os.Exit(1)
 	}
 
@@ -61,6 +62,32 @@ func main() {
 	r.Handle("/coffee", coffeeHandler).Methods("GET")
 
 	http.ListenAndServe(":9090", r)
+}
+
+// retryDBUntilReady keeps retrying the database connection
+// when running the application on a scheduler it is possible that the app will come up before
+// the database, this can cause the app to go into a CrashLoopBackoff cycle
+func retryDBUntilReady() (data.Connection, error) {
+	st := time.Now()
+	dt := 1*time.Second // this should be an exponential backoff
+	mt := 60*time.Second // max time to wait of the DB connection
+
+	for {
+		db, err := data.New(conf.DBConnection)
+		if err == nil {
+			return db, nil
+		}
+	
+		logger.Error("Unable to connect to database", "error", err)
+		
+		// check if max time has elapsed
+		if time.Now().Sub(st) > mt {
+			return nil, err
+		}
+
+		// retry
+		time.Sleep(dt)
+	}
 }
 
 func configUpdated() {
