@@ -1,0 +1,77 @@
+openapi: 3.0.0
+info:
+  title: Products API
+  description: Products API allows access to HashiCoffee Coffees and Ingredients
+  version: 0.1.9
+paths:
+
+  /coffees:
+    get:
+      summary: Returns a list of Coffee
+      responses:
+        '200':    # status code
+          description: A JSON array of coffee
+          content:
+            application/json:
+              schema: 
+                type: array
+                items: 
+                  type: object
+                  properties:
+                    id: 
+                      type: integer
+                      format: int64
+                      example: 1
+                    name: 
+                      type: string
+                      example: "Latte"
+                    price: 
+                      type: float
+                      format: float64
+                      example: 2.34
+                    created_at: 
+                      type: datetime
+                      example: 2020-01-10T00:00:00Z
+                    updated_at: 
+                      type: datetime
+                      example: 2020-01-10T00:00:00Z
+                    deleted_at: 
+                      type: datetime
+                      example: 2020-01-10T00:00:00Z
+                    ingredients:
+                      type: array
+                      items:
+                        type: integer
+
+  /coffees/{id}/ingredients:
+    get:
+      summary: Returns a list of ingredients for a coffee
+      responses:
+        '200':    # status code
+          description: A JSON array of ingredients
+          content:
+            application/json:
+              schema: 
+                type: array
+                items: 
+                  type: object
+                  properties:
+                    id: 
+                      type: integer
+                      format: int64
+                      example: 1
+                    name: 
+                      type: string
+                      example: "Milk"
+                    quantity: 
+                      type: string
+                      example: 500ml
+                    created_at: 
+                      type: datetime
+                      example: 2020-01-10T00:00:00Z
+                    updated_at: 
+                      type: datetime
+                      example: 2020-01-10T00:00:00Z
+                    deleted_at: 
+                      type: datetime
+                      example: 2020-01-10T00:00:00Z

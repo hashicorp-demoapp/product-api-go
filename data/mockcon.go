@@ -22,3 +22,14 @@ func (c*MockConnection) GetProducts() (model.Coffees, error) {
 
 	return nil, args.Error(1)
 }
+
+
+func (c*MockConnection) GetIngredientsForCoffee(coffeeid int) (model.Ingredients, error) {
+	args := c.Called()
+
+	if m, ok := args.Get(0).(model.Ingredients); ok {
+		return m, args.Error(1)
+	}
+
+	return nil, args.Error(1)
+}
