@@ -2,26 +2,25 @@ package data
 
 import (
 	"github.com/hashicorp-demoapp/product-api-go/data/model"
-	
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/postgres"
+
+	//"database/sql"
+    _ "github.com/lib/pq"
+    "github.com/jmoiron/sqlx"	
 )
 
 type Connection interface {
 	IsConnected() (bool, error)
 	GetProducts() (model.Coffees, error)
+	GetIngredientsForCoffee(int) (model.Ingredients, error)
 }
 
 type PostgresSQL struct {
-	db *gorm.DB
+	db *sqlx.DB
 }
 
 // New creates a new connection to the database
 func New(connection string) (Connection, error) {
-	db, err := gorm.Open("postgres", connection)
-	db.LogMode(true)
-
-	//db, err := sql.Open("postgres", connection)
+    db, err := sqlx.Connect("postgres", connection)
 	if err != nil {
 		return nil, err
 	}
@@ -31,7 +30,7 @@ func New(connection string) (Connection, error) {
 
 // IsConnected checks the connection to the database and returns an error if not connected
 func (c *PostgresSQL) IsConnected() (bool, error) {
-	err := c.db.DB().Ping()
+	err := c.db.Ping()
 	if err != nil {
 		return false, err
 	}
@@ -43,10 +42,38 @@ func (c *PostgresSQL) IsConnected() (bool, error) {
 func (c*PostgresSQL) GetProducts() (model.Coffees, error) {
 	cos := model.Coffees{}
 
-	db := c.db.Find(&cos)
-	if db.Error != nil {
-		return nil, db.Error
+	err := c.db.Select(&cos, "SELECT * FROM coffees")
+	if err != nil {
+		return nil, err
 	}
 
-	return cos,nil
+	// fetch the ingredients for each coffee
+	for n, cof := range cos {
+		i := []model.CoffeeIngredients{}
+		err := c.db.Select(&i, "SELECT ingredient_id FROM coffee_ingredients WHERE coffee_id=$1", cof.ID)
+		if err != nil {
+			return nil, err
+		}
+
+		cos[n].Ingredients = i
+	}
+
+	return cos, nil
+}
+
+// GetIngredientsForCoffee get the ingredients for the given coffeeid
+func (c*PostgresSQL) GetIngredientsForCoffee(coffeeid int) (model.Ingredients, error) {
+	is := []model.Ingredient{}
+	
+	err := c.db.Select(&is, 
+		`SELECT name, quantity FROM ingredients 
+		 LEFT JOIN coffee_ingredients ON ingredients.id=coffee_ingredients.ingredient_id 
+		 WHERE coffee_ingredients.coffee_id=$1`,
+		coffeeid,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return is, nil
 }

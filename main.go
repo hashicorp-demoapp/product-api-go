@@ -59,7 +59,10 @@ func main() {
 	r.Handle("/health", healthHandler).Methods("GET")
 
 	coffeeHandler := handlers.NewCoffee(db, logger)
-	r.Handle("/coffee", coffeeHandler).Methods("GET")
+	r.Handle("/coffees", coffeeHandler).Methods("GET")
+	
+	ingredientsHandler := handlers.NewIngredients(db, logger)
+	r.Handle("/coffees/{id:[0-9]}/ingredients", ingredientsHandler).Methods("GET")
 
 	http.ListenAndServe(":9090", r)
 }

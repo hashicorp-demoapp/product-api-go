@@ -1,33 +1,36 @@
 package model
 
-import "github.com/jinzhu/gorm"
-
-import "encoding/json"
+import (
+	"encoding/json"
+	"database/sql"
+)
 
 // Coffees is a list of Coffee
 type Coffees []Coffee
 
-// FromJSON serializes data from JSON
+// FromJSON serializes data from json
 func (c*Coffees) FromJSON(data []byte) error {
 	return json.Unmarshal(data, c)
 }
 
-// ToJSON converts the collection to JSON
+// ToJSON converts the collection to json
 func (c*Coffees) ToJSON() ([]byte, error) {
 	return json.Marshal(c)
 }
 
 // Coffee defines a coffee in the database
 type Coffee struct {
-	gorm.Model
-	Name         string      `json:"name"`
-	Price        float64     `json:"price"`
-	Ingredients []Ingredient `gorm:"many2many:coffee_ingredients;"` 
+	ID 			int                 `db:"id" json:"id"`
+	Name        string              `db:"name" json:"name"`
+	Price       float64             `db:"price" json:"price"`
+	CreatedAt   string              `db:"created_at" json:"created_at"`
+	UpdatedAt   string              `db:"updated_at" json:"updated_at"`
+	DeletedAt   sql.NullString      `db:"deleted_at" json:"deleted_at,omitempty"`
+	Ingredients []CoffeeIngredients `json:"ingredients"`
 }
 
-// Ingredient defines an ingredient in the database
-type Ingredient struct {
-	gorm.Model
-	Name         string `json:"name"`
-	Quantity     string `json:"quantity"`
+type CoffeeIngredients struct {
+	ID 			 int `db:"id" json:"-"`
+	CoffeeID     int `db:"coffee_id" json:"-"`
+	IngredientID int `db:"ingredient_id" json:"ingredient_id"`
 }
