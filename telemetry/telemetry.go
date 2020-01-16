@@ -22,7 +22,7 @@ type Telemetry struct {
 	counters map[string]*api.Float64Counter
 }
 
-func New() *Telemetry {
+func New(bind_address string) *Telemetry {
 	selector := simple.NewWithExactMeasure()
 	exporter, err := prometheus.NewExporter(prometheus.Options{})
 
@@ -35,7 +35,7 @@ func New() *Telemetry {
 	pusher.Start()
 
 	go func() {
-		_ = http.ListenAndServe(":9102", exporter)
+		_ = http.ListenAndServe(bind_address, exporter)
 	}()
 
 	global.SetMeterProvider(pusher)

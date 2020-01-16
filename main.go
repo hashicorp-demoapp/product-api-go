@@ -2,8 +2,8 @@ package main
 
 import (
 	"net/http"
-	"time"
 	"os"
+	"time"
 
 	"github.com/nicholasjackson/env"
 
@@ -17,7 +17,9 @@ import (
 
 // Config format for application
 type Config struct {
-	DBConnection string `json:"db_connection"`
+	DBConnection   string `json:"db_connection"`
+	BindAddress    string `json:"bind_address"`
+	MetricsAddress string `json:"metrics_address"`
 }
 
 var conf *Config
@@ -36,8 +38,6 @@ func main() {
 
 	conf = &Config{}
 
-	t := telemetry.New()
-
 	// load the config
 	c, err := config.New(*configFile, conf, configUpdated)
 	if err != nil {
@@ -45,6 +45,9 @@ func main() {
 		os.Exit(1)
 	}
 	defer c.Close()
+
+	// configure the telemetry
+	t := telemetry.New(conf.BindAddress)
 
 	// load the db connection
 	db, err := retryDBUntilReady()
@@ -54,13 +57,13 @@ func main() {
 	}
 
 	r := mux.NewRouter()
-	
+
 	healthHandler := handlers.NewHealth(t, logger, db)
 	r.Handle("/health", healthHandler).Methods("GET")
 
 	coffeeHandler := handlers.NewCoffee(db, logger)
 	r.Handle("/coffees", coffeeHandler).Methods("GET")
-	
+
 	ingredientsHandler := handlers.NewIngredients(db, logger)
 	r.Handle("/coffees/{id:[0-9]}/ingredients", ingredientsHandler).Methods("GET")
 
@@ -72,17 +75,17 @@ func main() {
 // the database, this can cause the app to go into a CrashLoopBackoff cycle
 func retryDBUntilReady() (data.Connection, error) {
 	st := time.Now()
-	dt := 1*time.Second // this should be an exponential backoff
-	mt := 60*time.Second // max time to wait of the DB connection
+	dt := 1 * time.Second  // this should be an exponential backoff
+	mt := 60 * time.Second // max time to wait of the DB connection
 
 	for {
 		db, err := data.New(conf.DBConnection)
 		if err == nil {
 			return db, nil
 		}
-	
+
 		logger.Error("Unable to connect to database", "error", err)
-		
+
 		// check if max time has elapsed
 		if time.Now().Sub(st) > mt {
 			return nil, err
