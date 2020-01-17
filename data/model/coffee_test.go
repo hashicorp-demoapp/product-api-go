@@ -1,15 +1,16 @@
 package model
 
 import (
-	"github.com/stretchr/testify/assert"
+	"bytes"
 	"encoding/json"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
-func TestCoffeesDeserializeFromJSON(t*testing.T) {
+func TestCoffeesDeserializeFromJSON(t *testing.T) {
 	c := Coffees{}
 
-	err := c.FromJSON([]byte(coffeesData))
+	err := c.FromJSON(bytes.NewReader([]byte(coffeesData)))
 	assert.NoError(t, err)
 
 	assert.Len(t, c, 2)
@@ -17,7 +18,7 @@ func TestCoffeesDeserializeFromJSON(t*testing.T) {
 	assert.Equal(t, 2, c[1].ID)
 }
 
-func TestCoffeesSerializesToJSON(t*testing.T) {
+func TestCoffeesSerializesToJSON(t *testing.T) {
 	c := Coffees{
 		Coffee{ID: 1, Name: "test", Price: 120.12},
 	}
