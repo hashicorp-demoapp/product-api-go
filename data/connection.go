@@ -4,8 +4,8 @@ import (
 	"github.com/hashicorp-demoapp/product-api-go/data/model"
 
 	//"database/sql"
-    _ "github.com/lib/pq"
-    "github.com/jmoiron/sqlx"	
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 )
 
 type Connection interface {
@@ -20,7 +20,7 @@ type PostgresSQL struct {
 
 // New creates a new connection to the database
 func New(connection string) (Connection, error) {
-    db, err := sqlx.Connect("postgres", connection)
+	db, err := sqlx.Connect("postgres", connection)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +39,7 @@ func (c *PostgresSQL) IsConnected() (bool, error) {
 }
 
 // GetProducts returns all products from the database
-func (c*PostgresSQL) GetProducts() (model.Coffees, error) {
+func (c *PostgresSQL) GetProducts() (model.Coffees, error) {
 	cos := model.Coffees{}
 
 	err := c.db.Select(&cos, "SELECT * FROM coffees")
@@ -62,13 +62,13 @@ func (c*PostgresSQL) GetProducts() (model.Coffees, error) {
 }
 
 // GetIngredientsForCoffee get the ingredients for the given coffeeid
-func (c*PostgresSQL) GetIngredientsForCoffee(coffeeid int) (model.Ingredients, error) {
+func (c *PostgresSQL) GetIngredientsForCoffee(coffeeid int) (model.Ingredients, error) {
 	is := []model.Ingredient{}
-	
-	err := c.db.Select(&is, 
-		`SELECT name, quantity FROM ingredients 
+
+	err := c.db.Select(&is,
+		`SELECT ingredients.name, coffee_ingredients.quantity, coffee_ingredients.unit FROM ingredients 
 		 LEFT JOIN coffee_ingredients ON ingredients.id=coffee_ingredients.ingredient_id 
-		 WHERE coffee_ingredients.coffee_id=$1`,
+		 WHERE coffee_ingredients.coffee_id=$1 AND coffee_ingredients.deleted_at IS NULL`,
 		coffeeid,
 	)
 	if err != nil {

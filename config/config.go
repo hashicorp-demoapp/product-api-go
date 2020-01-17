@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
@@ -22,9 +23,14 @@ type File struct {
 // filepath is the JSON formatted file to monitor
 // c is the interface to attempt to marshal the file into
 // updated is called when there are updates to the file
-func New(filepath string, c interface{}, updated func()) (*File, error) {
-	f := &File{path: filepath, userConfig: c, updated: updated}
-	go f.watch(filepath)
+func New(fp string, c interface{}, updated func()) (*File, error) {
+	ap, err := filepath.Abs(fp)
+	if err != nil {
+		return nil, err
+	}
+
+	f := &File{path: ap, userConfig: c, updated: updated}
+	go f.watch(ap)
 
 	// sleep to allow the watch to setup
 	time.Sleep(10 * time.Millisecond)

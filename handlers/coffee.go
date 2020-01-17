@@ -1,9 +1,9 @@
 package handlers
 
 import (
-	"net/http"
-	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp-demoapp/product-api-go/data"
+	"github.com/hashicorp/go-hclog"
+	"net/http"
 )
 
 type Coffee struct {
@@ -15,7 +15,7 @@ func NewCoffee(con data.Connection, l hclog.Logger) *Coffee {
 	return &Coffee{con, l}
 }
 
-func (c*Coffee) ServeHTTP(rw http.ResponseWriter, r*http.Request) {
+func (c *Coffee) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	c.log.Info("Handle Coffee")
 
 	prods, err := c.con.GetProducts()

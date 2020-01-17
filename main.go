@@ -25,7 +25,7 @@ type Config struct {
 var conf *Config
 var logger hclog.Logger
 
-var configFile = env.String("CONFIG_FILE", true, "", "Path to JSON encoded config file")
+var configFile = env.String("CONFIG_FILE", false, "./conf.json", "Path to JSON encoded config file")
 
 func main() {
 	logger = hclog.Default()
@@ -47,7 +47,7 @@ func main() {
 	defer c.Close()
 
 	// configure the telemetry
-	t := telemetry.New(conf.BindAddress)
+	t := telemetry.New(conf.MetricsAddress)
 
 	// load the db connection
 	db, err := retryDBUntilReady()
@@ -67,7 +67,10 @@ func main() {
 	ingredientsHandler := handlers.NewIngredients(db, logger)
 	r.Handle("/coffees/{id:[0-9]}/ingredients", ingredientsHandler).Methods("GET")
 
-	http.ListenAndServe(":9090", r)
+	err = http.ListenAndServe(conf.BindAddress, r)
+	if err != nil {
+		logger.Error("Unable to start server", "bind", conf.BindAddress, "error", err)
+	}
 }
 
 // retryDBUntilReady keeps retrying the database connection

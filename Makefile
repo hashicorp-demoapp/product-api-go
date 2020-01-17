@@ -1,6 +1,6 @@
 CONTAINER_NAME=hashicorpdemoapp/product-api
 DB_CONTAINER_NAME=hashicorpdemoapp/product-api-db
-CONTAINER_VERSION=v0.0.7
+CONTAINER_VERSION=v0.0.10
 
 # Run tests continually with  a watcher
 autotest:
