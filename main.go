@@ -67,6 +67,7 @@ func main() {
 	ingredientsHandler := handlers.NewIngredients(db, logger)
 	r.Handle("/coffees/{id:[0-9]}/ingredients", ingredientsHandler).Methods("GET")
 
+	logger.Info("Starting service", "bind", conf.BindAddress, "metrics", conf.MetricsAddress)
 	err = http.ListenAndServe(conf.BindAddress, r)
 	if err != nil {
 		logger.Error("Unable to start server", "bind", conf.BindAddress, "error", err)

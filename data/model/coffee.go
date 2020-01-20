@@ -27,6 +27,7 @@ type Coffee struct {
 	Teaser      string              `db:"teaser" json:"teaser"`
 	Description string              `db:"description" json:"description"`
 	Price       float64             `db:"price" json:"price"`
+	Image       string              `db:"image" json:"image"`
 	CreatedAt   string              `db:"created_at" json:"-"`
 	UpdatedAt   string              `db:"updated_at" json:"-"`
 	DeletedAt   sql.NullString      `db:"deleted_at" json:"-"`
