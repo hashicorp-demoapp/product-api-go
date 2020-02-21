@@ -22,6 +22,24 @@ jobs:
           paths:
             - product-api-go
 
+  functional_test:
+    docker:
+      - image: circleci/golang:1.13
+    environment:
+      GO111MODULE: "on"
+    working_directory: /go/src/github.com/hashicorpdemoapp/product-api-go
+    steps:
+      - setup_remote_docker
+      - attach_workspace:
+          at: /go/src/github.com/hashicorpdemoapp
+      - run: 
+          name: install shipyard
+          command: |
+            curl https://shipyard.run/install | bash
+      - run:
+          name: cucumber tests
+          command: make test_functional
+
   publish-docker-release:
     docker:
       - image: circleci/golang:1.13
@@ -80,6 +98,13 @@ jobs:
 
 workflows:
   version: 2
+  build:
+    jobs:
+      - build-go
+      - functional_test: 
+          requires:
+            - build-go
+
   build-and-release:
     jobs:
       - build-go:
