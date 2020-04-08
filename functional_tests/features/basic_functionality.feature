@@ -5,4 +5,11 @@ Feature: Basic Functionality
   Scenario: Get products
     Given the server is running
     When I make a "GET" request to "/coffees"
-    Then A list of products should be returned
+    Then a list of products should be returned
+    And the response status should be "OK"
+
+  Scenario: Get a product's ingredients
+    Given the server is running
+    When I make a "GET" request to "/coffees/{id:[0-9]+}/ingredients" where "id" is "1" 
+    Then a list of the product's ingredients should be returned
+    And the response status should be "OK"

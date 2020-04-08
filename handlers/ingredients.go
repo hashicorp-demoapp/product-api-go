@@ -4,10 +4,9 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/gorilla/mux"
 	"github.com/hashicorp-demoapp/product-api-go/data"
 	"github.com/hashicorp/go-hclog"
-
-	"github.com/gorilla/mux"
 )
 
 type Ingredients struct {
