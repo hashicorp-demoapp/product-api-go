@@ -29,9 +29,9 @@ CREATE TABLE coffee_ingredients (
 
 
 INSERT INTO ingredients (id, name, created_at, updated_at) VALUES (1, 'Espresso', CURRENT_DATE, CURRENT_DATE);
-INSERT INTO ingredients (id, name, created_at, updated_at) VALUES (2, 'Semi skimmed Milk', CURRENT_DATE, CURRENT_DATE);
+INSERT INTO ingredients (id, name, created_at, updated_at) VALUES (2, 'Semi Skimmed Milk', CURRENT_DATE, CURRENT_DATE);
 INSERT INTO ingredients (id, name, created_at, updated_at) VALUES (3, 'Hot Water', CURRENT_DATE, CURRENT_DATE);
-INSERT INTO ingredients (id, name, created_at, updated_at) VALUES (4, 'Pumkin Spice', CURRENT_DATE, CURRENT_DATE);
+INSERT INTO ingredients (id, name, created_at, updated_at) VALUES (4, 'Pumpkin Spice', CURRENT_DATE, CURRENT_DATE);
 INSERT INTO ingredients (id, name, created_at, updated_at) VALUES (5, 'Steamed Milk', CURRENT_DATE, CURRENT_DATE);
 
 
