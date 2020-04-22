@@ -12,6 +12,12 @@ type Connection interface {
 	IsConnected() (bool, error)
 	GetProducts() (model.Coffees, error)
 	GetIngredientsForCoffee(int) (model.Ingredients, error)
+	CreateUser(string, string) (model.User, error)
+	AuthUser(string, string) (model.User, error)
+	GetOrders(int, *int) (model.Orders, error)
+	CreateOrder(int, []model.OrderItems) (model.Order, error)
+	UpdateOrder(int, int, []model.OrderItems) (model.Order, error)
+	DeleteOrder(int, int) error
 }
 
 type PostgresSQL struct {
@@ -76,4 +82,247 @@ func (c *PostgresSQL) GetIngredientsForCoffee(coffeeid int) (model.Ingredients, 
 	}
 
 	return is, nil
+}
+
+// CreateUser creates a new user
+func (c *PostgresSQL) CreateUser(username string, password string) (model.User, error) {
+	u := model.User{}
+
+	rows, err := c.db.NamedQuery(
+		`INSERT INTO users (username, password, created_at, updated_at) 
+		VALUES(:username, crypt(:password, gen_salt('bf')), now(), now()) 
+		RETURNING id, username;`, map[string]interface{}{
+			"username": username,
+			"password": password,
+		})
+	if err != nil {
+		return u, err
+	}
+	defer rows.Close()
+
+	if rows.Next() {
+		err := rows.StructScan(&u)
+		if err != nil {
+			return u, err
+		}
+	}
+
+	return u, nil
+}
+
+// AuthUser checks whether username and password matches
+func (c *PostgresSQL) AuthUser(username string, password string) (model.User, error) {
+	us := []model.User{}
+
+	err := c.db.Select(&us,
+		`SELECT id, username FROM users 
+		WHERE username = $1 AND password = crypt($2, password);`,
+		username, password,
+	)
+	if err != nil {
+		return us[0], err
+	}
+
+	return us[0], nil
+}
+
+// GetOrders returns orders from the database
+func (c *PostgresSQL) GetOrders(userID int, orderID *int) (model.Orders, error) {
+	orders := model.Orders{}
+
+	if orderID != nil {
+		err := c.db.Select(&orders,
+			`SELECT * FROM orders WHERE user_id = $1 AND id = $2 AND deleted_at IS NULL`,
+			userID, orderID)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		err := c.db.Select(&orders,
+			`SELECT * FROM orders WHERE user_id = $1 AND deleted_at IS NULL`,
+			userID)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// fetch the coffee for each order
+	for n, order := range orders {
+		items := []model.OrderItems{}
+		err := c.db.Select(&items,
+			`SELECT * FROM order_items WHERE order_id=$1 AND deleted_at IS NULL`, order.ID)
+		if err != nil {
+			return nil, err
+		}
+		orders[n].Items = items
+
+		for i, item := range items {
+			coffee := model.Coffees{}
+			err := c.db.Select(&coffee,
+				`SELECT * FROM coffees WHERE id=$1 AND deleted_at IS NULL`, item.CoffeeID)
+			if err != nil {
+				return nil, err
+			}
+
+			if len(coffee) > 0 {
+				orders[n].Items[i].Coffee = coffee[0]
+			}
+		}
+	}
+
+	return orders, nil
+}
+
+// CreateOrder creates a new order in the database
+func (c *PostgresSQL) CreateOrder(userID int, orderItems []model.OrderItems) (model.Order, error) {
+	tx := c.db.MustBegin()
+
+	o := model.Order{}
+	rows, err := tx.NamedQuery(
+		`INSERT INTO orders (user_id, created_at, updated_at) 
+		VALUES (:user_id, now(), now()) RETURNING id`, map[string]interface{}{
+			"user_id": userID,
+		})
+	if err != nil {
+		return o, err
+	}
+	if rows.Next() {
+		err := rows.StructScan(&o)
+		if err != nil {
+			tx.Rollback()
+			return o, err
+		}
+	}
+
+	rows.Close()
+
+	for _, item := range orderItems {
+		_, err = tx.NamedExec(
+			`INSERT INTO order_items (order_id, coffee_id, quantity, created_at, updated_at) 
+			VALUES (:order_id, :coffee_id, :quantity, now(), now())`, map[string]interface{}{
+				"order_id":  o.ID,
+				"coffee_id": item.Coffee.ID,
+				"quantity":  item.Quantity,
+			})
+		if err != nil {
+			tx.Rollback()
+			return o, err
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return o, err
+	}
+
+	orders, err := c.GetOrders(userID, &o.ID)
+	if err != nil {
+		return o, err
+	}
+
+	if len(orders) == 0 {
+		return o, err
+	}
+
+	return orders[0], nil
+}
+
+// UpdateOrder updates an existing order in the database
+func (c *PostgresSQL) UpdateOrder(userID int, orderID int, orderItems []model.OrderItems) (model.Order, error) {
+	tx := c.db.MustBegin()
+
+	o := model.Order{}
+	rows, err := tx.NamedQuery(
+		`UPDATE orders SET updated_at = now()
+		WHERE user_id = :user_id AND id = :order_id RETURNING *`, map[string]interface{}{
+			"user_id":  userID,
+			"order_id": orderID,
+		})
+	if err != nil {
+		return o, err
+	}
+	if rows.Next() {
+		err := rows.StructScan(&o)
+		if err != nil {
+			tx.Rollback()
+			return o, err
+		}
+	}
+
+	rows.Close()
+
+	// remove existing items from order
+	_, err = tx.NamedExec(
+		`UPDATE order_items SET deleted_at = now()
+		WHERE order_id = :order_id AND deleted_at IS NULL`, map[string]interface{}{
+			"order_id": orderID,
+		})
+	if err != nil {
+		tx.Rollback()
+		return o, err
+	}
+
+	for _, item := range orderItems {
+		_, err = tx.NamedExec(
+			`INSERT INTO order_items (order_id, coffee_id, quantity, created_at, updated_at) 
+			VALUES (:order_id, :coffee_id, :quantity, now(), now())`, map[string]interface{}{
+				"order_id":  o.ID,
+				"coffee_id": item.Coffee.ID,
+				"quantity":  item.Quantity,
+			})
+		if err != nil {
+			tx.Rollback()
+			return o, err
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return o, err
+	}
+
+	orders, err := c.GetOrders(userID, &orderID)
+	if err != nil {
+		return o, err
+	}
+
+	if len(orders) > 0 {
+		return o, err
+	}
+
+	return orders[0], nil
+}
+
+// DeleteOrder deletes an existing order in the database
+func (c *PostgresSQL) DeleteOrder(userID int, orderID int) error {
+	tx := c.db.MustBegin()
+
+	// remove existing items from order
+	_, err := tx.NamedExec(
+		`UPDATE order_items SET deleted_at = now()
+		WHERE order_id = :order_id AND deleted_at IS NULL`, map[string]interface{}{
+			"order_id": orderID,
+		})
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	_, err = tx.NamedExec(
+		`UPDATE orders SET deleted_at = now()
+		WHERE user_id = :user_id AND id = :order_id AND deleted_at IS NULL`, map[string]interface{}{
+			"user_id":  userID,
+			"order_id": orderID,
+		})
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
