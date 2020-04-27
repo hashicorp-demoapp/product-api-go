@@ -26,7 +26,7 @@ func TestOrdersDeserializeFromJSON(t *testing.T) {
 func TestOrdersSerializesToJSON(t *testing.T) {
 	o := Orders{
 		Order{
-			ID: 0,
+			ID: 1,
 			Items: []OrderItems{
 				OrderItems{
 					Coffee:   Coffee{ID: 0},
@@ -49,7 +49,7 @@ func TestOrdersSerializesToJSON(t *testing.T) {
 
 	order := od[0]
 
-	assert.Equal(t, float64(0), order["id"])
+	assert.Equal(t, float64(1), order["id"])
 
 	orderItems := order["items"].([]interface{})
 

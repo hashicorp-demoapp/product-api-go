@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/cucumber/godog"
@@ -59,12 +61,15 @@ func TestMain(m *testing.M) {
 
 type apiFeature struct {
 	mc *data.MockConnection
-	c  *handlers.Coffee
+	hc *handlers.Coffee
+	hu *handlers.User
+	ho *handlers.Order
 	rw *httptest.ResponseRecorder
 	r  *http.Request
 }
 
-func (api *apiFeature) newCoffeeHandler() {
+func (api *apiFeature) initHandlers() {
+	// Coffee
 	mc := &data.MockConnection{}
 	mc.On("GetProducts").Return(model.Coffees{model.Coffee{ID: 1, Name: "Test"}}, nil)
 	mc.On("GetIngredientsForCoffee").Return(model.Ingredients{
@@ -72,10 +77,15 @@ func (api *apiFeature) newCoffeeHandler() {
 		model.Ingredient{ID: 2, Name: "Milk"},
 		model.Ingredient{ID: 2, Name: "Sugar"},
 	})
+	// User
+	mc.On("CreateUser").Return(model.User{ID: 1, Username: "User1"}, nil)
+	mc.On("AuthUser").Return(model.User{ID: 1, Username: "User1"}, nil)
+
 	l := hclog.Default()
 
 	api.mc = mc
-	api.c = handlers.NewCoffee(mc, l)
+	api.hc = handlers.NewCoffee(mc, l)
+	api.hu = handlers.NewUser(mc, l)
 }
 
 func (api *apiFeature) theServerIsRunning() error {
@@ -93,7 +103,10 @@ func (api *apiFeature) iMakeARequestTo(method, endpoint string) error {
 	api.rw = httptest.NewRecorder()
 	api.r = httptest.NewRequest(method, endpoint, nil)
 
-	api.c.ServeHTTP(api.rw, api.r)
+	if strings.Contains(endpoint, "/coffee") {
+		api.hc.ServeHTTP(api.rw, api.r)
+		return nil
+	}
 
 	return nil
 }
@@ -105,7 +118,10 @@ func (api *apiFeature) iMakeARequestToWhereIs(method, endpoint string, attribute
 	vars := map[string]string{attribute: value}
 	api.r = mux.SetURLVars(api.r, vars)
 
-	api.c.ServeHTTP(api.rw, api.r)
+	if strings.Contains(endpoint, "/coffee") {
+		api.hc.ServeHTTP(api.rw, api.r)
+		return nil
+	}
 
 	return nil
 }
@@ -140,10 +156,37 @@ func (api *apiFeature) thatProductsIngredientsShouldBeReturned() error {
 	return nil
 }
 
+func (api *apiFeature) iMakeARequestToWithTheFollowingRequestBody(method, endpoint, body string) error {
+	api.rw = httptest.NewRecorder()
+	api.r = httptest.NewRequest(method, endpoint, nil)
+
+	rb := strings.NewReader(`{"username": "User1", "password": "testPassword"}`)
+	api.r.Body = ioutil.NopCloser(rb)
+
+	if strings.Contains(endpoint, "/signup") {
+		api.hu.SignUp(api.rw, api.r)
+		return nil
+	} else if strings.Contains(endpoint, "/signin") {
+		api.hu.SignIn(api.rw, api.r)
+		return nil
+	}
+
+	return nil
+}
+
+func (api *apiFeature) theAuthResponseShouldBeReturned() error {
+	bd := handlers.AuthResponse{}
+	err := json.Unmarshal(api.rw.Body.Bytes(), &bd)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func FeatureContext(s *godog.Suite) {
 	api := &apiFeature{}
 
-	api.newCoffeeHandler()
+	api.initHandlers()
 
 	s.Step(`^the server is running$`, api.theServerIsRunning)
 
@@ -153,4 +196,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^a list of products should be returned$`, api.aListOfProductsShouldBeReturned)
 	s.Step(`^the response status should be "([^"]*)"$`, api.theResponseStatusShouldBe)
 	s.Step(`^a list of the product\'s ingredients should be returned$`, api.thatProductsIngredientsShouldBeReturned)
+
+	s.Step(`^I make a "([^"]*)" request to "([^"]*)" with the following request body "([^"]*)"$`, api.iMakeARequestToWithTheFollowingRequestBody)
+	s.Step(`^the AuthResponse should be returned$`, api.theAuthResponseShouldBeReturned)
 }

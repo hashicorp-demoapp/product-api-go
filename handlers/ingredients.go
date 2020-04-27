@@ -9,11 +9,13 @@ import (
 	"github.com/hashicorp/go-hclog"
 )
 
+// Ingredients -
 type Ingredients struct {
 	con data.Connection
 	log hclog.Logger
 }
 
+// NewIngredients -
 func NewIngredients(con data.Connection, l hclog.Logger) *Ingredients {
 	return &Ingredients{con, l}
 }

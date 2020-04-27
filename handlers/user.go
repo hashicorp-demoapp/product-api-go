@@ -13,22 +13,26 @@ import (
 
 const jwtSecret = "test"
 
+// User -
 type User struct {
 	con data.Connection
 	log hclog.Logger
 }
 
+// AuthStruct -
 type AuthStruct struct {
 	Username string `json:"username,omitempty"`
 	Password string `json:"password,omitempty"`
 }
 
+// AuthResponse -
 type AuthResponse struct {
 	UserID   int    `json:"user_id,omitempty`
 	Username string `json:"username,omitempty`
 	Token    string `json:"token,omitempty"`
 }
 
+// NewUser -
 func NewUser(con data.Connection, l hclog.Logger) *User {
 	return &User{con, l}
 }

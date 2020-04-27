@@ -139,14 +139,14 @@ func (c *Order) UpdateOrder(userID int, rw http.ResponseWriter, r *http.Request)
 	order, err := c.con.UpdateOrder(userID, orderID, body)
 	if err != nil {
 		c.log.Error("Unable to create new order", "error", err)
-		http.Error(rw, "Unable to update new order", http.StatusInternalServerError)
+		http.Error(rw, "Unable to update order", http.StatusInternalServerError)
 		return
 	}
 
 	d, err := order.ToJSON()
 	if err != nil {
 		c.log.Error("Unable to convert order to JSON", "error", err)
-		http.Error(rw, "Unable to update new order", http.StatusInternalServerError)
+		http.Error(rw, "Unable to update order", http.StatusInternalServerError)
 	}
 
 	rw.Write(d)

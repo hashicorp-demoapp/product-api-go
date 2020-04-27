@@ -13,3 +13,15 @@ Feature: Basic Functionality
     When I make a "GET" request to "/coffees/{id:[0-9]+}/ingredients" where "id" is "1" 
     Then a list of the product's ingredients should be returned
     And the response status should be "OK"
+
+  Scenario: Create new user
+    Given the server is running
+    When I make a "POST" request to "/signup" with the following request body "{'username': 'User1', 'password': 'testPassword'}"
+    Then the AuthResponse should be returned
+    And the response status should be "OK"
+
+  Scenario: Sign in user
+    Given the server is running
+    When I make a "POST" request to "/signin" with the following request body "{'username': 'User1', 'password': 'testPassword'}"
+    Then the AuthResponse should be returned
+    And the response status should be "OK"
