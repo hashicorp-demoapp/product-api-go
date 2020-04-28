@@ -39,9 +39,7 @@ func setupOrderHandler(t *testing.T) (*Order, *httptest.ResponseRecorder) {
 		},
 	}
 
-	c.On("GetOrders").Return(model.Orders{
-		testOrder,
-	}, nil)
+	c.On("GetOrders").Return(model.Orders{testOrder}, nil)
 	c.On("CreateOrder").Return(testOrder, nil)
 	c.On("UpdateOrder").Return(testOrder, nil)
 	c.On("DeleteOrder").Return(nil)
