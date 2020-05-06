@@ -1,6 +1,6 @@
 CONTAINER_NAME=hashicorpdemoapp/product-api
 DB_CONTAINER_NAME=hashicorpdemoapp/product-api-db
-CONTAINER_VERSION=v0.0.11
+CONTAINER_VERSION=v0.0.12
 
 test_functional:
 	shipyard run ./blueprint
