@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/nicholasjackson/env"
 
 	"github.com/gorilla/mux"
@@ -26,6 +27,8 @@ var conf *Config
 var logger hclog.Logger
 
 var configFile = env.String("CONFIG_FILE", false, "./conf.json", "Path to JSON encoded config file")
+
+const jwtSecret = "test"
 
 func main() {
 	logger = hclog.Default()
@@ -67,11 +70,51 @@ func main() {
 	ingredientsHandler := handlers.NewIngredients(db, logger)
 	r.Handle("/coffees/{id:[0-9]+}/ingredients", ingredientsHandler).Methods("GET")
 
+	userHandler := handlers.NewUser(db, logger)
+	r.HandleFunc("/signup", userHandler.SignUp).Methods("POST")
+	r.HandleFunc("/signin", userHandler.SignIn).Methods("POST")
+
+	orderHandler := handlers.NewOrder(db, logger)
+	r.Handle("/orders", isAuthorizedMiddleware(orderHandler.GetUserOrders)).Methods("GET")
+	r.Handle("/orders", isAuthorizedMiddleware(orderHandler.CreateOrder)).Methods("POST")
+	r.Handle("/orders/{id:[0-9]+}", isAuthorizedMiddleware(orderHandler.GetUserOrder)).Methods("GET")
+	r.Handle("/orders/{id:[0-9]+}", isAuthorizedMiddleware(orderHandler.UpdateOrder)).Methods("PUT")
+	r.Handle("/orders/{id:[0-9]+}", isAuthorizedMiddleware(orderHandler.DeleteOrder)).Methods("DELETE")
+
 	logger.Info("Starting service", "bind", conf.BindAddress, "metrics", conf.MetricsAddress)
 	err = http.ListenAndServe(conf.BindAddress, r)
 	if err != nil {
 		logger.Error("Unable to start server", "bind", conf.BindAddress, "error", err)
 	}
+}
+
+// isAuthorizedMiddleware
+func isAuthorizedMiddleware(next func(userID int, w http.ResponseWriter, r *http.Request)) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		authToken := r.Header.Get("Authorization")
+
+		token, err := jwt.Parse(authToken, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				logger.Error("Unable to parse JWT token", "path", r.URL.Path)
+				http.Error(w, "Unauthorized0", http.StatusUnauthorized)
+				return nil, nil
+			}
+			return []byte(jwtSecret), nil
+		})
+
+		if err != nil {
+			logger.Error("Unauthorized", "error", err)
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+
+		// if token is valid
+		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+			userID := int(claims["user_id"].(float64))
+			next(userID, w, r)
+			return
+		}
+	})
 }
 
 // retryDBUntilReady keeps retrying the database connection

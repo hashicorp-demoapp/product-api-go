@@ -7,11 +7,13 @@ import (
 	"github.com/hashicorp/go-hclog"
 )
 
+// Coffee -
 type Coffee struct {
 	con data.Connection
 	log hclog.Logger
 }
 
+// NewCoffee -
 func NewCoffee(con data.Connection, l hclog.Logger) *Coffee {
 	return &Coffee{con, l}
 }

@@ -28,14 +28,14 @@ func TestIngredientsSerializesToJSON(t *testing.T) {
 	d, err := c.ToJSON()
 	assert.NoError(t, err)
 
-	cd := make([]map[string]interface{}, 0)
-	err = json.Unmarshal(d, &cd)
+	id := make([]map[string]interface{}, 0)
+	err = json.Unmarshal(d, &id)
 	assert.NoError(t, err)
 
-	assert.Equal(t, float64(1), cd[0]["id"])
-	assert.Equal(t, "test", cd[0]["name"])
-	assert.Equal(t, float64(10), cd[0]["quantity"])
-	assert.Equal(t, "ml", cd[0]["unit"])
+	assert.Equal(t, float64(1), id[0]["id"])
+	assert.Equal(t, "test", id[0]["name"])
+	assert.Equal(t, float64(10), id[0]["quantity"])
+	assert.Equal(t, "ml", id[0]["unit"])
 }
 
 var ingredientsData = `
