@@ -3,6 +3,7 @@ module github.com/hashicorp-demoapp/product-api-go
 go 1.13
 
 require (
+	github.com/cucumber/godog v0.8.1
 	github.com/fsnotify/fsnotify v1.4.7
 	github.com/gorilla/mux v1.7.3
 	github.com/hashicorp/go-hclog v0.10.0

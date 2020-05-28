@@ -2,9 +2,10 @@ CONTAINER_NAME=hashicorpdemoapp/product-api
 DB_CONTAINER_NAME=hashicorpdemoapp/product-api-db
 CONTAINER_VERSION=v0.0.10
 
-# Run tests continually with  a watcher
-autotest:
-	filewatcher --idle-timeout 24h -x **/functional_tests gotestsum --format standard-verbose
+test_functional:
+	shipyard run ./blueprint
+	cd ./functional_tests && go test -v -run.test true ./..
+	shipyard destroy
 
 build_db:
 	cd database && docker build -t ${DB_CONTAINER_NAME}:${CONTAINER_VERSION} .

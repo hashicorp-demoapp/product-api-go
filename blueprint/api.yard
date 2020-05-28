@@ -1,0 +1,12 @@
+title = "Product API"
+author = "Erik Veld, Nicholas Jackson"
+slug = "hashicups"
+
+// Shown in the command output when yard apply is run
+intro = <<EOF
+    To connect to the PostgreSQL DB use localhost:15432
+    
+    The API can be accessed at http://localhost:19090/coffees
+
+EOF
+
