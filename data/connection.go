@@ -66,7 +66,7 @@ func (c *PostgresSQL) GetIngredientsForCoffee(coffeeid int) (model.Ingredients, 
 	is := []model.Ingredient{}
 
 	err := c.db.Select(&is,
-		`SELECT ingredients.name, coffee_ingredients.quantity, coffee_ingredients.unit FROM ingredients 
+		`SELECT ingredients.id, ingredients.name, coffee_ingredients.quantity, coffee_ingredients.unit FROM ingredients 
 		 LEFT JOIN coffee_ingredients ON ingredients.id=coffee_ingredients.ingredient_id 
 		 WHERE coffee_ingredients.coffee_id=$1 AND coffee_ingredients.deleted_at IS NULL`,
 		coffeeid,

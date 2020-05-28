@@ -65,7 +65,7 @@ func main() {
 	r.Handle("/coffees", coffeeHandler).Methods("GET")
 
 	ingredientsHandler := handlers.NewIngredients(db, logger)
-	r.Handle("/coffees/{id:[0-9]}/ingredients", ingredientsHandler).Methods("GET")
+	r.Handle("/coffees/{id:[0-9]+}/ingredients", ingredientsHandler).Methods("GET")
 
 	logger.Info("Starting service", "bind", conf.BindAddress, "metrics", conf.MetricsAddress)
 	err = http.ListenAndServe(conf.BindAddress, r)

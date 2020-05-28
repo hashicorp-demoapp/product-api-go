@@ -1,9 +1,10 @@
 package handlers
 
 import (
+	"net/http"
+
 	"github.com/hashicorp-demoapp/product-api-go/data"
 	"github.com/hashicorp/go-hclog"
-	"net/http"
 )
 
 type Coffee struct {
