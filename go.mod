@@ -11,7 +11,7 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/fsnotify/fsnotify v1.4.7
 	github.com/gorilla/mux v1.7.3
-	github.com/hashicorp-demoapp/go-hckit v0.0.1
+	github.com/hashicorp-demoapp/go-hckit@4adc6bb79c7bfdfaaf3792310a311a0c9ffaa788
 	github.com/hashicorp/go-hclog v0.10.0
 	github.com/jinzhu/gorm v1.9.11 // indirect
 	github.com/jmoiron/sqlx v1.2.0
@@ -27,4 +27,3 @@ require (
 	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543
 )
 
-replace github.com/hashicorp-demoapp/go-hckit => /Users/derekstrickland/code/consul-dev/hashicorp-demoapp/go-hckit
