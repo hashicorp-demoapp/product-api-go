@@ -2,24 +2,29 @@ package client
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
+	hckit "github.com/hashicorp-demoapp/go-hckit"
 	"github.com/hashicorp-demoapp/product-api-go/data/model"
 )
 
 // HTTP contains all client details
 type HTTP struct {
+	client  *http.Client
 	baseURL string
 }
 
 // NewHTTP creates a new HTTP client
 func NewHTTP(baseURL string) *HTTP {
-	return &HTTP{baseURL}
+	c := &http.Client{Transport: hckit.TracingRoundTripper{Proxied: http.DefaultTransport}}
+	return &HTTP{c, baseURL}
 }
 
 // GetCoffees retrieves a list of coffees
 func (h *HTTP) GetCoffees() ([]model.Coffee, error) {
-	resp, err := http.Get(fmt.Sprintf("%s/coffees", h.baseURL))
+	log.Print("INFO: Executing GetCoffees")
+	resp, err := h.client.Get(fmt.Sprintf("%s/coffees", h.baseURL))
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +40,7 @@ func (h *HTTP) GetCoffees() ([]model.Coffee, error) {
 
 // GetCoffee retrieves a single coffee
 func (h *HTTP) GetCoffee(coffeeID int) (*model.Coffee, error) {
-	resp, err := http.Get(fmt.Sprintf("%s/coffees/%d", h.baseURL, coffeeID))
+	resp, err := h.client.Get(fmt.Sprintf("%s/coffees/%d", h.baseURL, coffeeID))
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +56,7 @@ func (h *HTTP) GetCoffee(coffeeID int) (*model.Coffee, error) {
 
 // GetIngredientsForCoffee retrieves a list of ingredients that go into a particular coffee
 func (h *HTTP) GetIngredientsForCoffee(coffeeID int) ([]model.Ingredient, error) {
-	resp, err := http.Get(fmt.Sprintf("%s/coffees/%d/ingredients", h.baseURL, coffeeID))
+	resp, err := h.client.Get(fmt.Sprintf("%s/coffees/%d/ingredients", h.baseURL, coffeeID))
 	if err != nil {
 		return nil, err
 	}
