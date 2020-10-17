@@ -10,7 +10,7 @@ require (
 	github.com/fsnotify/fsnotify v1.4.7
 	github.com/go-sql-driver/mysql v1.4.1 // indirect
 	github.com/gorilla/mux v1.7.3
-	github.com/hashicorp-demoapp/go-hckit v0.0.1
+	github.com/hashicorp-demoapp/go-hckit@4adc6bb79c7bfdfaaf3792310a311a0c9ffaa788
 	github.com/hashicorp/go-hclog v0.10.0
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/lib/pq v1.2.0
