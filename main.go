@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/hashicorp-demoapp/go-hckit"
 	"github.com/nicholasjackson/env"
 
 	"github.com/gorilla/mux"
@@ -39,6 +40,13 @@ func main() {
 		os.Exit(1)
 	}
 
+	closer, err := hckit.InitGlobalTracer("product-api")
+	if err != nil {
+		logger.Error("Unable to initialize Tracer", "error", err)
+		os.Exit(1)
+	}
+	defer closer.Close()
+
 	conf = &Config{}
 
 	// load the config
@@ -60,6 +68,7 @@ func main() {
 	}
 
 	r := mux.NewRouter()
+	r.Use(hckit.TracingMiddleware)
 
 	healthHandler := handlers.NewHealth(t, logger, db)
 	r.Handle("/health", healthHandler).Methods("GET")
