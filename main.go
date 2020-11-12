@@ -105,7 +105,7 @@ func isAuthorizedMiddleware(next func(userID int, w http.ResponseWriter, r *http
 		token, err := jwt.Parse(authToken, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				logger.Error("Unable to parse JWT token", "path", r.URL.Path)
-				http.Error(w, "Unauthorized0", http.StatusUnauthorized)
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return nil, nil
 			}
 			return []byte(jwtSecret), nil
