@@ -123,6 +123,10 @@ func isAuthorizedMiddleware(next func(userID int, w http.ResponseWriter, r *http
 			next(userID, w, r)
 			return
 		}
+
+		logger.Error("Invalid Token", "error", err)
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
 	})
 }
 
