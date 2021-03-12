@@ -18,6 +18,8 @@ type Connection interface {
 	CreateOrder(int, []model.OrderItems) (model.Order, error)
 	UpdateOrder(int, int, []model.OrderItems) (model.Order, error)
 	DeleteOrder(int, int) error
+	CreateCoffee(model.Coffee) (model.Coffee, error)
+	CreateCoffeeIngredient(model.Coffee, model.Ingredient) (model.CoffeeIngredients, error)
 }
 
 type PostgresSQL struct {
@@ -325,4 +327,61 @@ func (c *PostgresSQL) DeleteOrder(userID int, orderID int) error {
 	}
 
 	return nil
+}
+
+// CreateCoffee creates a new coffee
+func (c *PostgresSQL) CreateCoffee(coffee model.Coffee) (model.Coffee, error) {
+	m := model.Coffee{}
+
+	rows, err := c.db.NamedQuery(
+		`INSERT INTO coffees (name, teaser, description, price, image, created_at, updated_at) 
+		VALUES(:name, :teaser, :description, :price, :image, now(), now()) 
+		RETURNING id;`, map[string]interface{}{
+			"name":        coffee.Name,
+			"teaser":      coffee.Teaser,
+			"description": coffee.Description,
+			"price":       coffee.Price,
+			"image":       coffee.Image,
+		})
+	if err != nil {
+		return m, err
+	}
+	defer rows.Close()
+
+	if rows.Next() {
+		err := rows.StructScan(&m)
+		if err != nil {
+			return m, err
+		}
+	}
+
+	return m, nil
+}
+
+// CreateCoffeeIngredient creates a new coffee ingredient
+func (c *PostgresSQL) CreateCoffeeIngredient(coffee model.Coffee, ingredient model.Ingredient) (model.CoffeeIngredients, error) {
+	i := model.CoffeeIngredients{}
+
+	rows, err := c.db.NamedQuery(
+		`INSERT INTO coffee_ingredients (coffee_id, ingredient_id, quantity, unit,  created_at, updated_at) 
+		VALUES(:coffee_id, :ingredient_id, :quantity, :unit, now(), now()) 
+		RETURNING id;`, map[string]interface{}{
+			"coffee_id":     coffee.ID,
+			"ingredient_id": ingredient.ID,
+			"quantity":      ingredient.Quantity,
+			"unit":          ingredient.Unit,
+		})
+	if err != nil {
+		return i, err
+	}
+	defer rows.Close()
+
+	if rows.Next() {
+		err := rows.StructScan(&i)
+		if err != nil {
+			return i, err
+		}
+	}
+
+	return i, nil
 }

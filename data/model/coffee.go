@@ -52,3 +52,8 @@ type CoffeeIngredients struct {
 	UpdatedAt    string         `db:"updated_at" json:"-"`
 	DeletedAt    sql.NullString `db:"deleted_at" json:"-"`
 }
+
+// ToJSON converts the collection to json
+func (c *CoffeeIngredients) ToJSON() ([]byte, error) {
+	return json.Marshal(c)
+}

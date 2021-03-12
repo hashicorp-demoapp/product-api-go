@@ -1,9 +1,11 @@
 package handlers
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/hashicorp-demoapp/product-api-go/data"
+	"github.com/hashicorp-demoapp/product-api-go/data/model"
 	"github.com/hashicorp/go-hclog"
 )
 
@@ -13,7 +15,7 @@ type Coffee struct {
 	log hclog.Logger
 }
 
-// NewCoffee -
+// NewCoffee
 func NewCoffee(con data.Connection, l hclog.Logger) *Coffee {
 	return &Coffee{con, l}
 }
@@ -31,6 +33,35 @@ func (c *Coffee) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		c.log.Error("Unable to convert products to JSON", "error", err)
 		http.Error(rw, "Unable to list products", http.StatusInternalServerError)
+	}
+
+	rw.Write(d)
+}
+
+// CreateCoffee creates a new coffee
+func (c *Coffee) CreateCoffee(_ int, rw http.ResponseWriter, r *http.Request) {
+	c.log.Info("Handle Coffee | CreateCoffee")
+
+	body := model.Coffee{}
+
+	err := json.NewDecoder(r.Body).Decode(&body)
+	if err != nil {
+		c.log.Error("Unable to decode JSON", "error", err)
+		http.Error(rw, "Unable to parse request body", http.StatusInternalServerError)
+		return
+	}
+
+	coffee, err := c.con.CreateCoffee(body)
+	if err != nil {
+		c.log.Error("Unable to create new coffee", "error", err)
+		http.Error(rw, "Unable to create new coffee", http.StatusInternalServerError)
+		return
+	}
+
+	d, err := coffee.ToJSON()
+	if err != nil {
+		c.log.Error("Unable to convert coffee to JSON", "error", err)
+		http.Error(rw, "Unable to create new coffee", http.StatusInternalServerError)
 	}
 
 	rw.Write(d)
