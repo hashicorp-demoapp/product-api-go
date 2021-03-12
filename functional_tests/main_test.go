@@ -58,6 +58,7 @@ type apiFeature struct {
 	hc *handlers.Coffee
 	hu *handlers.User
 	ho *handlers.Order
+	hi *handlers.Ingredients
 	rw *httptest.ResponseRecorder
 	r  *http.Request
 }
@@ -83,6 +84,8 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^an AuthResponse should be returned$`, api.theAuthResponseShouldBeReturned)
 	s.Step(`^a list of orders should be returned$`, api.aListOfOrdersShouldBeReturned)
 	s.Step(`^an order should be returned$`, api.anOrderShouldBeReturned)
+	s.Step(`^a coffee should be returned$`, api.aCoffeeShouldBeReturned)
+	s.Step(`^a coffee ingredient should be returned$`, api.aCoffeeIngredientShouldBeReturned)
 
 	s.Step(`^the response status should be "([^"]*)"$`, api.theResponseStatusShouldBe)
 }
