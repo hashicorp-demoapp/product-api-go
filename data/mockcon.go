@@ -113,7 +113,7 @@ func (c *MockConnection) CreateCoffee(coffee model.Coffee) (model.Coffee, error)
 	return model.Coffee{}, args.Error(1)
 }
 
-// CreateCoffeeIngredient creates a new coffee ingredient type
+// UpsertCoffeeIngredient upserts a new coffee ingredient type
 func (c *MockConnection) UpsertCoffeeIngredient(coffee model.Coffee, ingredient model.Ingredient) (model.CoffeeIngredient, error) {
 	args := c.Called()
 
