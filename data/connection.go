@@ -365,7 +365,7 @@ func (c *PostgresSQL) CreateCoffee(coffee model.Coffee) (model.Coffee, error) {
 	return m, nil
 }
 
-// CreateCoffeeIngredient creates a new coffee ingredient
+// UpsertCoffeeIngredient upserts a new coffee ingredient
 func (c *PostgresSQL) UpsertCoffeeIngredient(coffee model.Coffee, ingredient model.Ingredient) (model.CoffeeIngredient, error) {
 	i := model.CoffeeIngredient{}
 
