@@ -50,7 +50,7 @@ func (c *Ingredients) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
 // CreateCoffeeIngredient creates a new coffee ingredient
 func (c *Ingredients) CreateCoffeeIngredient(_ int, rw http.ResponseWriter, r *http.Request) {
-	c.log.Info("Handle Coffee | UpsertCoffeeIngredient")
+	c.log.Info("Handle Coffee | CreateCoffeeIngredient")
 
 	body := struct {
 		CoffeeID     int    `json:"coffee_id"`
