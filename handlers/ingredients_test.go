@@ -49,7 +49,7 @@ func TestCoffeeIDReturnsIngredients(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-// UpsertCoffeeIngredient - Tests success criteria
+// TestCreateCoffeeIngredient - Tests success criteria for creating coffee ingredient
 func TestCreateCoffeeIngredient(t *testing.T) {
 	c, rw := setupIngredientsHandler()
 
