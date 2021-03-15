@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/hashicorp-demoapp/product-api-go/data"
@@ -51,17 +52,10 @@ func (c *Coffee) CreateCoffee(_ int, rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	coffees, err := c.con.GetProductsByName(body.Name)
-	if len(coffees) > 0 {
-		c.log.Error("A coffee with the same name already exists", "error")
-		http.Error(rw, "A coffee with the same name already exists", http.StatusBadRequest)
-		return
-	}
-
 	coffee, err := c.con.CreateCoffee(body)
 	if err != nil {
 		c.log.Error("Unable to create new coffee", "error", err)
-		http.Error(rw, "Unable to create new coffee", http.StatusInternalServerError)
+		http.Error(rw, fmt.Sprintf("Unable to create new coffee: %s", err.Error()), http.StatusInternalServerError)
 		return
 	}
 

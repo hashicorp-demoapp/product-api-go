@@ -25,17 +25,6 @@ func (c *MockConnection) GetProducts() (model.Coffees, error) {
 	return nil, args.Error(1)
 }
 
-// GetProducts -
-func (c *MockConnection) GetProductsByName(name string) (model.Coffees, error) {
-	args := c.Called()
-
-	if m, ok := args.Get(0).(model.Coffees); ok {
-		return m, args.Error(1)
-	}
-
-	return nil, args.Error(1)
-}
-
 // GetIngredientsForCoffee -
 func (c *MockConnection) GetIngredientsForCoffee(coffeeid int) (model.Ingredients, error) {
 	args := c.Called()

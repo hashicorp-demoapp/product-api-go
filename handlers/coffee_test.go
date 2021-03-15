@@ -18,7 +18,7 @@ func setupCoffeeHandler() (*Coffee, *httptest.ResponseRecorder) {
 	c := &data.MockConnection{}
 	c.On("GetProducts").Return(model.Coffees{model.Coffee{ID: 1, Name: "Test"}}, nil)
 	c.On("CreateCoffee").Return(model.Coffees{model.Coffee{ID: 1, Name: "Test"}}, nil)
-	c.On("GetProductsByName").Return(nil, nil)
+	c.On("GetProductByName").Return(nil, nil)
 
 	l := hclog.Default()
 
@@ -55,26 +55,4 @@ func TestCreateCoffee(t *testing.T) {
 	err := json.Unmarshal(rw.Body.Bytes(), &bd)
 
 	assert.NoError(t, err)
-}
-
-// TestCreateCoffee - Tests success criteria
-func TestCreateDuplicateCoffee(t *testing.T) {
-	con := &data.MockConnection{}
-	con.On("CreateCoffee").Return(model.Coffees{model.Coffee{ID: 1, Name: "Test"}}, nil)
-	con.On("GetProductsByName").Return(model.Coffees{model.Coffee{ID: 1, Name: "Test"}}, nil)
-
-	l := hclog.Default()
-
-	c := &Coffee{con, l}
-	rw := httptest.NewRecorder()
-
-	userID := 1
-	r := httptest.NewRequest("POST", "/coffees", nil)
-
-	rb := strings.NewReader(`{"coffee":{"id":1,"name":"Latte"}}`)
-	r.Body = ioutil.NopCloser(rb)
-
-	c.CreateCoffee(userID, rw, r)
-
-	assert.Equal(t, http.StatusBadRequest, rw.Code)
 }

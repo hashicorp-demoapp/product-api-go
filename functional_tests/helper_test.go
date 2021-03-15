@@ -22,7 +22,6 @@ func (api *apiFeature) initHandlers() {
 	mc := &data.MockConnection{}
 	mc.On("GetProducts").Return(model.Coffees{model.Coffee{ID: 1, Name: "Test"}}, nil)
 	mc.On("CreateCoffee").Return(model.Coffee{ID: 1, Name: "Test"}, nil)
-	mc.On("GetProductsByName").Return(nil, nil)
 	mc.On("CreateCoffeeIngredient").Return(model.CoffeeIngredients{ID: 1, CoffeeID: 1, IngredientID: 3}, nil)
 	mc.On("GetIngredientsForCoffee").Return(model.Ingredients{
 		model.Ingredient{ID: 1, Name: "Coffee"},

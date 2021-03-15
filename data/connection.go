@@ -2,7 +2,6 @@ package data
 
 import (
 	"github.com/hashicorp-demoapp/product-api-go/data/model"
-
 	//"database/sql"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -11,7 +10,6 @@ import (
 type Connection interface {
 	IsConnected() (bool, error)
 	GetProducts() (model.Coffees, error)
-	GetProductsByName(name string) (model.Coffees, error)
 	GetIngredientsForCoffee(int) (model.Ingredients, error)
 	CreateUser(string, string) (model.User, error)
 	AuthUser(string, string) (model.User, error)
@@ -57,29 +55,6 @@ func (c *PostgresSQL) GetProducts() (model.Coffees, error) {
 	}
 
 	// fetch the ingredients for each coffee
-	for n, cof := range cos {
-		i := []model.CoffeeIngredients{}
-		err := c.db.Select(&i, "SELECT ingredient_id FROM coffee_ingredients WHERE coffee_id=$1", cof.ID)
-		if err != nil {
-			return nil, err
-		}
-
-		cos[n].Ingredients = i
-	}
-
-	return cos, nil
-}
-
-// GetProductsByName returns a product by its name
-func (c *PostgresSQL) GetProductsByName(name string) (model.Coffees, error) {
-	cos := model.Coffees{}
-
-	err := c.db.Select(&cos, "SELECT * FROM coffees WHERE name=$1", name)
-	if err != nil {
-		return nil, err
-	}
-
-	// fetch the ingredients for the coffee
 	for n, cof := range cos {
 		i := []model.CoffeeIngredients{}
 		err := c.db.Select(&i, "SELECT ingredient_id FROM coffee_ingredients WHERE coffee_id=$1", cof.ID)
