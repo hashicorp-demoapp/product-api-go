@@ -57,7 +57,7 @@ func (c *PostgresSQL) GetProducts() (model.Coffees, error) {
 	// fetch the ingredients for each coffee
 	for n, cof := range cos {
 		i := []model.CoffeeIngredient{}
-		err := c.db.Select(&i, "SELECT ingredient_id FROM coffee_ingredients WHERE coffee_id=$1", cof.ID)
+		err := c.db.Select(&i, "SELECT ingredient_id FROM coffee_ingredients WHERE coffee_id=$1 AND quantity > 0", cof.ID)
 		if err != nil {
 			return nil, err
 		}
@@ -169,7 +169,7 @@ func (c *PostgresSQL) GetOrders(userID int, orderID *int) (model.Orders, error) 
 				orders[n].Items[i].Coffee = coffee[0]
 
 				ing := []model.CoffeeIngredient{}
-				err := c.db.Select(&ing, "SELECT ingredient_id FROM coffee_ingredients WHERE coffee_id=$1", orders[n].Items[i].Coffee.ID)
+				err := c.db.Select(&ing, "SELECT ingredient_id FROM coffee_ingredients WHERE coffee_id=$1 AND quantity > 0", orders[n].Items[i].Coffee.ID)
 				if err != nil {
 					return nil, err
 				}
