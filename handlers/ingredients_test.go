@@ -22,7 +22,7 @@ func setupIngredientsHandler() (*Ingredients, *httptest.ResponseRecorder) {
 		model.Ingredient{ID: 2, Name: "Milk"},
 		model.Ingredient{ID: 2, Name: "Sugar"},
 	}, nil)
-	c.On("CreateCoffeeIngredient").Return(model.CoffeeIngredients{
+	c.On("UpsertCoffeeIngredient").Return(model.CoffeeIngredient{
 		ID:           1,
 		CoffeeID:     2,
 		IngredientID: 3,
@@ -49,7 +49,7 @@ func TestCoffeeIDReturnsIngredients(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-// CreateCoffeeIngredient - Tests success criteria
+// UpsertCoffeeIngredient - Tests success criteria
 func TestCreateCoffeeIngredient(t *testing.T) {
 	c, rw := setupIngredientsHandler()
 

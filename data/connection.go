@@ -18,7 +18,7 @@ type Connection interface {
 	UpdateOrder(int, int, []model.OrderItems) (model.Order, error)
 	DeleteOrder(int, int) error
 	CreateCoffee(model.Coffee) (model.Coffee, error)
-	CreateCoffeeIngredient(model.Coffee, model.Ingredient) (model.CoffeeIngredients, error)
+	UpsertCoffeeIngredient(model.Coffee, model.Ingredient) (model.CoffeeIngredient, error)
 }
 
 type PostgresSQL struct {
@@ -56,7 +56,7 @@ func (c *PostgresSQL) GetProducts() (model.Coffees, error) {
 
 	// fetch the ingredients for each coffee
 	for n, cof := range cos {
-		i := []model.CoffeeIngredients{}
+		i := []model.CoffeeIngredient{}
 		err := c.db.Select(&i, "SELECT ingredient_id FROM coffee_ingredients WHERE coffee_id=$1", cof.ID)
 		if err != nil {
 			return nil, err
@@ -168,7 +168,7 @@ func (c *PostgresSQL) GetOrders(userID int, orderID *int) (model.Orders, error) 
 			if len(coffee) > 0 {
 				orders[n].Items[i].Coffee = coffee[0]
 
-				ing := []model.CoffeeIngredients{}
+				ing := []model.CoffeeIngredient{}
 				err := c.db.Select(&ing, "SELECT ingredient_id FROM coffee_ingredients WHERE coffee_id=$1", orders[n].Items[i].Coffee.ID)
 				if err != nil {
 					return nil, err
@@ -366,12 +366,14 @@ func (c *PostgresSQL) CreateCoffee(coffee model.Coffee) (model.Coffee, error) {
 }
 
 // CreateCoffeeIngredient creates a new coffee ingredient
-func (c *PostgresSQL) CreateCoffeeIngredient(coffee model.Coffee, ingredient model.Ingredient) (model.CoffeeIngredients, error) {
-	i := model.CoffeeIngredients{}
+func (c *PostgresSQL) UpsertCoffeeIngredient(coffee model.Coffee, ingredient model.Ingredient) (model.CoffeeIngredient, error) {
+	i := model.CoffeeIngredient{}
 
 	rows, err := c.db.NamedQuery(
-		`INSERT INTO coffee_ingredients (coffee_id, ingredient_id, quantity, unit,  created_at, updated_at) 
+		`INSERT INTO coffee_ingredients (coffee_id, ingredient_id, quantity, unit, created_at, updated_at) 
 		VALUES(:coffee_id, :ingredient_id, :quantity, :unit, now(), now()) 
+		ON CONFLICT ON CONSTRAINT unique_coffee_ingredient
+		DO UPDATE SET quantity = :quantity, unit = :unit
 		RETURNING id;`, map[string]interface{}{
 			"coffee_id":     coffee.ID,
 			"ingredient_id": ingredient.ID,

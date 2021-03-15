@@ -22,7 +22,7 @@ func (api *apiFeature) initHandlers() {
 	mc := &data.MockConnection{}
 	mc.On("GetProducts").Return(model.Coffees{model.Coffee{ID: 1, Name: "Test"}}, nil)
 	mc.On("CreateCoffee").Return(model.Coffee{ID: 1, Name: "Test"}, nil)
-	mc.On("CreateCoffeeIngredient").Return(model.CoffeeIngredients{ID: 1, CoffeeID: 1, IngredientID: 3}, nil)
+	mc.On("UpsertCoffeeIngredient").Return(model.CoffeeIngredient{ID: 1, CoffeeID: 1, IngredientID: 3}, nil)
 	mc.On("GetIngredientsForCoffee").Return(model.Ingredients{
 		model.Ingredient{ID: 1, Name: "Coffee"},
 		model.Ingredient{ID: 2, Name: "Milk"},
@@ -263,7 +263,7 @@ func (api *apiFeature) aCoffeeShouldBeReturned() error {
 }
 
 func (api *apiFeature) aCoffeeIngredientShouldBeReturned() error {
-	bd := model.CoffeeIngredients{}
+	bd := model.CoffeeIngredient{}
 	err := json.Unmarshal(api.rw.Body.Bytes(), &bd)
 	if err != nil {
 		return fmt.Errorf("%s: %s", err.Error(), string(api.rw.Body.Bytes()))
