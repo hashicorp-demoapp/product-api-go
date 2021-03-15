@@ -21,13 +21,14 @@ CREATE TABLE ingredients (
 );
 CREATE TABLE coffee_ingredients (
     id serial PRIMARY KEY, 
-    coffee_id int references coffees(id), 
-    ingredient_id int references ingredients(id), 
+    coffee_id int references coffees(id),
+    ingredient_id int references ingredients(id),
     quantity int NOT NULL, 
     unit VARCHAR (50) NOT NULL, 
     created_at TIMESTAMP NOT NULL, 
     updated_at TIMESTAMP NOT NULL, 
-    deleted_at TIMESTAMP
+    deleted_at TIMESTAMP,
+    CONSTRAINT unique_coffee_ingredient UNIQUE (coffee_id,ingredient_id)
 );
 CREATE TABLE users (
     id serial PRIMARY KEY, 
