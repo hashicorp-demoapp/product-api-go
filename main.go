@@ -75,9 +75,11 @@ func main() {
 
 	coffeeHandler := handlers.NewCoffee(db, logger)
 	r.Handle("/coffees", coffeeHandler).Methods("GET")
+	r.Handle("/coffees", isAuthorizedMiddleware(coffeeHandler.CreateCoffee)).Methods("POST")
 
 	ingredientsHandler := handlers.NewIngredients(db, logger)
 	r.Handle("/coffees/{id:[0-9]+}/ingredients", ingredientsHandler).Methods("GET")
+	r.Handle("/coffees/{id:[0-9]+}/ingredients", isAuthorizedMiddleware(ingredientsHandler.CreateCoffeeIngredient)).Methods("POST")
 
 	userHandler := handlers.NewUser(db, logger)
 	r.HandleFunc("/signup", userHandler.SignUp).Methods("POST")

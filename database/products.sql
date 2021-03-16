@@ -3,13 +3,13 @@ create extension pgcrypto;
 
 CREATE TABLE coffees (
     id serial PRIMARY KEY, 
-    name VARCHAR (255) NOT NULL,
+    name VARCHAR (255) NOT NULL UNIQUE,
     teaser VARCHAR(255) NULL,
     description TEXT NULL,
     price INT NOT NULL,
     image TEXT,
     created_at TIMESTAMP NOT NULL, 
-    updated_at TIMESTAMP NOT NULL, 
+    updated_at TIMESTAMP NOT NULL,
     deleted_at TIMESTAMP
 );
 CREATE TABLE ingredients (
@@ -21,13 +21,14 @@ CREATE TABLE ingredients (
 );
 CREATE TABLE coffee_ingredients (
     id serial PRIMARY KEY, 
-    coffee_id int references coffees(id), 
-    ingredient_id int references ingredients(id), 
+    coffee_id int references coffees(id),
+    ingredient_id int references ingredients(id),
     quantity int NOT NULL, 
     unit VARCHAR (50) NOT NULL, 
     created_at TIMESTAMP NOT NULL, 
     updated_at TIMESTAMP NOT NULL, 
-    deleted_at TIMESTAMP
+    deleted_at TIMESTAMP,
+    CONSTRAINT unique_coffee_ingredient UNIQUE (coffee_id,ingredient_id)
 );
 CREATE TABLE users (
     id serial PRIMARY KEY, 
