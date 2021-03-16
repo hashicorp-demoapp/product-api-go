@@ -101,3 +101,25 @@ func (c *MockConnection) DeleteOrder(userID int, orderID int) error {
 
 	return nil
 }
+
+// CreateCoffee creates a new coffee type
+func (c *MockConnection) CreateCoffee(coffee model.Coffee) (model.Coffee, error) {
+	args := c.Called()
+
+	if m, ok := args.Get(0).(model.Coffee); ok {
+		return m, args.Error(1)
+	}
+
+	return model.Coffee{}, args.Error(1)
+}
+
+// UpsertCoffeeIngredient upserts a new coffee ingredient type
+func (c *MockConnection) UpsertCoffeeIngredient(coffee model.Coffee, ingredient model.Ingredient) (model.CoffeeIngredient, error) {
+	args := c.Called()
+
+	if m, ok := args.Get(0).(model.CoffeeIngredient); ok {
+		return m, args.Error(1)
+	}
+
+	return model.CoffeeIngredient{}, args.Error(1)
+}

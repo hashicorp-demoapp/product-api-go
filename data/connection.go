@@ -2,7 +2,6 @@ package data
 
 import (
 	"github.com/hashicorp-demoapp/product-api-go/data/model"
-
 	//"database/sql"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -18,6 +17,8 @@ type Connection interface {
 	CreateOrder(int, []model.OrderItems) (model.Order, error)
 	UpdateOrder(int, int, []model.OrderItems) (model.Order, error)
 	DeleteOrder(int, int) error
+	CreateCoffee(model.Coffee) (model.Coffee, error)
+	UpsertCoffeeIngredient(model.Coffee, model.Ingredient) (model.CoffeeIngredient, error)
 }
 
 type PostgresSQL struct {
@@ -55,8 +56,8 @@ func (c *PostgresSQL) GetProducts() (model.Coffees, error) {
 
 	// fetch the ingredients for each coffee
 	for n, cof := range cos {
-		i := []model.CoffeeIngredients{}
-		err := c.db.Select(&i, "SELECT ingredient_id FROM coffee_ingredients WHERE coffee_id=$1", cof.ID)
+		i := []model.CoffeeIngredient{}
+		err := c.db.Select(&i, "SELECT ingredient_id FROM coffee_ingredients WHERE coffee_id=$1 AND quantity > 0", cof.ID)
 		if err != nil {
 			return nil, err
 		}
@@ -166,6 +167,14 @@ func (c *PostgresSQL) GetOrders(userID int, orderID *int) (model.Orders, error) 
 
 			if len(coffee) > 0 {
 				orders[n].Items[i].Coffee = coffee[0]
+
+				ing := []model.CoffeeIngredient{}
+				err := c.db.Select(&ing, "SELECT ingredient_id FROM coffee_ingredients WHERE coffee_id=$1 AND quantity > 0", orders[n].Items[i].Coffee.ID)
+				if err != nil {
+					return nil, err
+				}
+
+				orders[n].Items[i].Coffee.Ingredients = ing
 			}
 		}
 	}
@@ -325,4 +334,63 @@ func (c *PostgresSQL) DeleteOrder(userID int, orderID int) error {
 	}
 
 	return nil
+}
+
+// CreateCoffee creates a new coffee
+func (c *PostgresSQL) CreateCoffee(coffee model.Coffee) (model.Coffee, error) {
+	m := model.Coffee{}
+
+	rows, err := c.db.NamedQuery(
+		`INSERT INTO coffees (name, teaser, description, price, image, created_at, updated_at) 
+		VALUES(:name, :teaser, :description, :price, :image, now(), now()) 
+		RETURNING id;`, map[string]interface{}{
+			"name":        coffee.Name,
+			"teaser":      coffee.Teaser,
+			"description": coffee.Description,
+			"price":       coffee.Price,
+			"image":       coffee.Image,
+		})
+	if err != nil {
+		return m, err
+	}
+	defer rows.Close()
+
+	if rows.Next() {
+		err := rows.StructScan(&m)
+		if err != nil {
+			return m, err
+		}
+	}
+
+	return m, nil
+}
+
+// UpsertCoffeeIngredient upserts a new coffee ingredient
+func (c *PostgresSQL) UpsertCoffeeIngredient(coffee model.Coffee, ingredient model.Ingredient) (model.CoffeeIngredient, error) {
+	i := model.CoffeeIngredient{}
+
+	rows, err := c.db.NamedQuery(
+		`INSERT INTO coffee_ingredients (coffee_id, ingredient_id, quantity, unit, created_at, updated_at) 
+		VALUES(:coffee_id, :ingredient_id, :quantity, :unit, now(), now()) 
+		ON CONFLICT ON CONSTRAINT unique_coffee_ingredient
+		DO UPDATE SET quantity = :quantity, unit = :unit
+		RETURNING id;`, map[string]interface{}{
+			"coffee_id":     coffee.ID,
+			"ingredient_id": ingredient.ID,
+			"quantity":      ingredient.Quantity,
+			"unit":          ingredient.Unit,
+		})
+	if err != nil {
+		return i, err
+	}
+	defer rows.Close()
+
+	if rows.Next() {
+		err := rows.StructScan(&i)
+		if err != nil {
+			return i, err
+		}
+	}
+
+	return i, nil
 }

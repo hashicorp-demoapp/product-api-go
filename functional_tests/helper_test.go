@@ -21,6 +21,8 @@ func (api *apiFeature) initHandlers() {
 	// Coffee
 	mc := &data.MockConnection{}
 	mc.On("GetProducts").Return(model.Coffees{model.Coffee{ID: 1, Name: "Test"}}, nil)
+	mc.On("CreateCoffee").Return(model.Coffee{ID: 1, Name: "Test"}, nil)
+	mc.On("UpsertCoffeeIngredient").Return(model.CoffeeIngredient{ID: 1, CoffeeID: 1, IngredientID: 3}, nil)
 	mc.On("GetIngredientsForCoffee").Return(model.Ingredients{
 		model.Ingredient{ID: 1, Name: "Coffee"},
 		model.Ingredient{ID: 2, Name: "Milk"},
@@ -61,22 +63,10 @@ func (api *apiFeature) initHandlers() {
 	api.hc = handlers.NewCoffee(mc, l)
 	api.hu = handlers.NewUser(mc, l)
 	api.ho = handlers.NewOrder(mc, l)
+	api.hi = handlers.NewIngredients(mc, l)
 }
 
 func (api *apiFeature) initRouter(method, endpoint string, userID *string) error {
-	if strings.Contains(endpoint, "/coffees") {
-		api.hc.ServeHTTP(api.rw, api.r)
-		return nil
-	}
-	if strings.Contains(endpoint, "/signup") {
-		api.hu.SignUp(api.rw, api.r)
-		return nil
-	}
-	if strings.Contains(endpoint, "/signin") {
-		api.hu.SignIn(api.rw, api.r)
-		return nil
-	}
-
 	if userID != nil {
 		i, err := strconv.Atoi(*userID)
 		if err != nil {
@@ -91,14 +81,34 @@ func (api *apiFeature) initRouter(method, endpoint string, userID *string) error
 				api.ho.GetUserOrder(i, api.rw, api.r)
 			}
 		case http.MethodPost:
+			if endpoint == "/coffees/{id:[0-9]+}/ingredients" {
+				api.hi.CreateCoffeeIngredient(i, api.rw, api.r)
+				return nil
+			}
+			if endpoint == "/coffees" {
+				api.hc.CreateCoffee(i, api.rw, api.r)
+				return nil
+			}
 			api.ho.CreateOrder(i, api.rw, api.r)
 		case http.MethodPut:
 			api.ho.UpdateOrder(i, api.rw, api.r)
 		case http.MethodDelete:
 			api.ho.DeleteOrder(i, api.rw, api.r)
 		}
+		return nil
 	}
 
+	if strings.Contains(endpoint, "/coffees") {
+		api.hc.ServeHTTP(api.rw, api.r)
+		return nil
+	}
+	if strings.Contains(endpoint, "/signup") {
+		api.hu.SignUp(api.rw, api.r)
+		return nil
+	}
+	if strings.Contains(endpoint, "/signin") {
+		api.hu.SignIn(api.rw, api.r)
+	}
 	return nil
 }
 
@@ -239,6 +249,24 @@ func (api *apiFeature) anOrderShouldBeReturned() error {
 	err := json.Unmarshal(api.rw.Body.Bytes(), &bd)
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func (api *apiFeature) aCoffeeShouldBeReturned() error {
+	bd := model.Coffee{}
+	err := json.Unmarshal(api.rw.Body.Bytes(), &bd)
+	if err != nil {
+		return fmt.Errorf("%s: %s", err.Error(), string(api.rw.Body.Bytes()))
+	}
+	return nil
+}
+
+func (api *apiFeature) aCoffeeIngredientShouldBeReturned() error {
+	bd := model.CoffeeIngredient{}
+	err := json.Unmarshal(api.rw.Body.Bytes(), &bd)
+	if err != nil {
+		return fmt.Errorf("%s: %s", err.Error(), string(api.rw.Body.Bytes()))
 	}
 	return nil
 }
