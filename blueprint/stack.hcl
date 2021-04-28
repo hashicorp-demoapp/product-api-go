@@ -8,7 +8,7 @@ container "db" {
     }
 
     image {
-        name = "hashicorpdemoapp/product-api-db:v0.0.11"
+        name = "hashicorpdemoapp/product-api-db:v0.0.15"
     }
 
     env {
@@ -25,6 +25,12 @@ container "db" {
         key = "POSTGRES_PASSWORD"
         value = "password"
     }
+    
+    port {
+        local = 5432
+        remote = 5432
+        host = 15432
+    }
 }
 
 container "api" {
@@ -33,7 +39,7 @@ container "api" {
     }
 
     image {
-        name = "hashicorpdemoapp/product-api:v0.0.11"
+        name = "hashicorpdemoapp/product-api:v0.0.15"
     }
 
     volume {
@@ -45,29 +51,7 @@ container "api" {
         key = "CONFIG_FILE"
         value = "/config/config.json"
     }
-}
-
-ingress "db" {
-    target = "container.db"
     
-    network {
-        name = "network.local"
-    }
-
-    port {
-        local = 5432
-        remote = 5432
-        host = 15432
-    }
-}
-
-ingress "api" {
-    target = "container.api"
-    
-    network {
-        name = "network.local"
-    }
-
     port {
         local = 9090
         remote = 9090
