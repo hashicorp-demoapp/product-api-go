@@ -8,7 +8,7 @@ container "db" {
     }
 
     image {
-        name = "hashicorpdemoapp/product-api-db:v0.0.15"
+        name = "hashicorpdemoapp/product-api-db:v0.0.16"
     }
 
     env {
@@ -20,12 +20,12 @@ container "db" {
         key = "POSTGRES_USER"
         value = "postgres"
     }
-    
+
     env {
         key = "POSTGRES_PASSWORD"
         value = "password"
     }
-    
+
     port {
         local = 5432
         remote = 5432
@@ -39,7 +39,7 @@ container "api" {
     }
 
     image {
-        name = "hashicorpdemoapp/product-api:v0.0.15"
+        name = "hashicorpdemoapp/product-api:v0.0.16"
     }
 
     volume {
@@ -51,7 +51,7 @@ container "api" {
         key = "CONFIG_FILE"
         value = "/config/config.json"
     }
-    
+
     port {
         local = 9090
         remote = 9090

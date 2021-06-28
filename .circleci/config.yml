@@ -1,4 +1,30 @@
-version: 2
+version: 2.1
+
+commands:
+
+  configure-dockerhub:
+    description: Configure Docker Hub access
+    steps:
+      - run:
+          name: docker login
+          command: docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}
+
+  install-docker-buildx:
+    description: Install Docker Buildx
+    steps:
+      - run:
+          name: Install Docker Buildx
+          command: |
+            mkdir -vp ~/.docker/cli-plugins/
+            curl --silent -L "https://github.com/docker/buildx/releases/download/v0.5.1/buildx-v0.5.1.linux-amd64" > ~/.docker/cli-plugins/docker-buildx
+            chmod a+x ~/.docker/cli-plugins/docker-buildx
+            docker buildx version
+            sudo apt-get update && sudo apt-get install -y binfmt-support qemu-user-static
+            docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+            docker run --privileged --rm tonistiigi/binfmt --install arm64
+            docker context create buildcontext
+            docker buildx create buildcontext --use
+
 jobs:
   build-go:
     docker:
@@ -16,7 +42,10 @@ jobs:
           command: go test -v ./...
       - run:
           name: build application (linux)
-          command: CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/product-api
+          command: CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ./bin/amd64/product-api
+      - run:
+          name: build application (arm64)
+          command: CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o ./bin/arm64/product-api
       - persist_to_workspace:
           root: /go/src/github.com/hashicorpdemoapp
           paths:
@@ -32,7 +61,7 @@ jobs:
       - setup_remote_docker
       - attach_workspace:
           at: /go/src/github.com/hashicorpdemoapp
-      - run: 
+      - run:
           name: install shipyard
           command: |
             curl https://shipyard.run/install | bash
@@ -42,47 +71,45 @@ jobs:
 
   publish-docker-release:
     docker:
-      - image: circleci/golang:1.13
-    environment:
-      GO111MODULE: "on"
-    working_directory: /go/src/github.com/hashicorpdemoapp/product-api-go
+      - image: cimg/base:stable
+    working_directory: ~/go/src/github.com/hashicorpdemoapp/product-api-go
     steps:
-      - setup_remote_docker
+      - setup_remote_docker:
+          version: 19.03.14
+      - install-docker-buildx
+      - configure-dockerhub
       - attach_workspace:
-          at: /go/src/github.com/hashicorpdemoapp
-      - run:
-          name: docker login
-          command: docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}
-      - run:
-          name: docker build
-          command: |
-            docker build -t hashicorpdemoapp/product-api:${CIRCLE_TAG} .
+          at: ~/go/src/github.com/hashicorpdemoapp
       - run:
           name: docker push
           command: |
-            docker push hashicorpdemoapp/product-api:${CIRCLE_TAG}
-  
+            docker buildx inspect --bootstrap
+            docker buildx build --platform linux/arm64,linux/amd64 \
+                -t hashicorpdemoapp/product-api:${CIRCLE_TAG} \
+                -f ./Dockerfile \
+                ./bin \
+                --push
+
   publish-docker-db-release:
     docker:
-      - image: circleci/golang:1.13
-    environment:
-      GO111MODULE: "on"
-    working_directory: /go/src/github.com/hashicorpdemoapp/product-api-go
+      - image: cimg/base:stable
+    working_directory: ~/go/src/github.com/hashicorpdemoapp/product-api-go
     steps:
-      - setup_remote_docker
+      - setup_remote_docker:
+          version: 19.03.14
+      - install-docker-buildx
+      - configure-dockerhub
       - attach_workspace:
-          at: /go/src/github.com/hashicorpdemoapp
-      - run:
-          name: docker login
-          command: docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}
-      - run:
-          name: docker build
-          command: |
-            cd database && docker build -t hashicorpdemoapp/product-api-db:${CIRCLE_TAG} .
+          at: ~/go/src/github.com/hashicorpdemoapp
       - run:
           name: docker push
           command: |
-            docker push hashicorpdemoapp/product-api-db:${CIRCLE_TAG}
+            docker buildx inspect --bootstrap
+              docker buildx build --platform linux/arm64,linux/amd64 \
+                -t hashicorpdemoapp/product-api-db:${CIRCLE_TAG} \
+                -f ./database/Dockerfile \
+                ./database \
+                --push
 
   publish-github-release:
     docker:
@@ -91,6 +118,12 @@ jobs:
     steps:
       - attach_workspace:
           at: ~/go/src/github.com/hashicorpdemoapp
+      - run:
+          name: "Zip binaries"
+          command: |
+            cd ./bin
+            zip -j product_api_go_linux_amd64.zip ./amd64/product-api
+            zip -j product_api_go_linux_arm64.zip ./arm64/product-api
       - run:
           name: "Publish Release on GitHub"
           command: |
@@ -101,7 +134,7 @@ workflows:
   build:
     jobs:
       - build-go
-      - functional_test: 
+      - functional_test:
           requires:
             - build-go
 
@@ -110,7 +143,9 @@ workflows:
       - build-go:
           filters:
             tags:
-              only: /.*/
+              only: /^v.*/
+            branches:
+              ignore: /.*/
       - publish-docker-release:
           requires:
             - build-go

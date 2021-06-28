@@ -13,29 +13,29 @@ paths:
           description: A JSON array of coffee
           content:
             application/json:
-              schema: 
+              schema:
                 type: array
-                items: 
+                items:
                   type: object
                   properties:
-                    id: 
+                    id:
                       type: integer
                       format: int64
                       example: 1
-                    name: 
+                    name:
                       type: string
                       example: "Latte"
-                    price: 
+                    price:
                       type: float
                       format: float64
                       example: 2.34
-                    created_at: 
+                    created_at:
                       type: datetime
                       example: 2020-01-10T00:00:00Z
-                    updated_at: 
+                    updated_at:
                       type: datetime
                       example: 2020-01-10T00:00:00Z
-                    deleted_at: 
+                    deleted_at:
                       type: datetime
                       example: 2020-01-10T00:00:00Z
                     ingredients:
@@ -51,27 +51,27 @@ paths:
           description: A JSON array of ingredients
           content:
             application/json:
-              schema: 
+              schema:
                 type: array
-                items: 
+                items:
                   type: object
                   properties:
-                    id: 
+                    id:
                       type: integer
                       format: int64
                       example: 1
-                    name: 
+                    name:
                       type: string
                       example: "Milk"
-                    quantity: 
+                    quantity:
                       type: string
                       example: 500ml
-                    created_at: 
+                    created_at:
                       type: datetime
                       example: 2020-01-10T00:00:00Z
-                    updated_at: 
+                    updated_at:
                       type: datetime
                       example: 2020-01-10T00:00:00Z
-                    deleted_at: 
+                    deleted_at:
                       type: datetime
                       example: 2020-01-10T00:00:00Z
