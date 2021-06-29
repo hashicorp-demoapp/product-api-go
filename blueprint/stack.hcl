@@ -20,12 +20,12 @@ container "db" {
         key = "POSTGRES_USER"
         value = "postgres"
     }
-    
+
     env {
         key = "POSTGRES_PASSWORD"
         value = "password"
     }
-    
+
     port {
         local = 5432
         remote = 5432
@@ -51,7 +51,7 @@ container "api" {
         key = "CONFIG_FILE"
         value = "/config/config.json"
     }
-    
+
     port {
         local = 9090
         remote = 9090
