@@ -38,6 +38,12 @@ CREATE TABLE users (
     updated_at TIMESTAMP NOT NULL,
     deleted_at TIMESTAMP
 );
+CREATE TABLE tokens (
+    id serial PRIMARY KEY,
+    user_id int references users(id),
+    created_at TIMESTAMP NOT NULL,
+    deleted_at TIMESTAMP
+);
 CREATE TABLE orders (
     id serial PRIMARY KEY,
     user_id int references users(id),
