@@ -5,7 +5,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/hashicorp-demoapp/go-hckit"
 	"github.com/nicholasjackson/env"
 
@@ -70,66 +69,36 @@ func main() {
 	r := mux.NewRouter()
 	r.Use(hckit.TracingMiddleware)
 
+	authMiddleware := handlers.NewAuthMiddleware(db, logger)
+
 	healthHandler := handlers.NewHealth(t, logger, db)
 	r.Handle("/health", healthHandler).Methods("GET")
 
 	coffeeHandler := handlers.NewCoffee(db, logger)
 	r.Handle("/coffees", coffeeHandler).Methods("GET")
-	r.Handle("/coffees", isAuthorizedMiddleware(coffeeHandler.CreateCoffee)).Methods("POST")
+	r.Handle("/coffees", authMiddleware.IsAuthorized(coffeeHandler.CreateCoffee)).Methods("POST")
 
 	ingredientsHandler := handlers.NewIngredients(db, logger)
 	r.Handle("/coffees/{id:[0-9]+}/ingredients", ingredientsHandler).Methods("GET")
-	r.Handle("/coffees/{id:[0-9]+}/ingredients", isAuthorizedMiddleware(ingredientsHandler.CreateCoffeeIngredient)).Methods("POST")
+	r.Handle("/coffees/{id:[0-9]+}/ingredients", authMiddleware.IsAuthorized(ingredientsHandler.CreateCoffeeIngredient)).Methods("POST")
 
 	userHandler := handlers.NewUser(db, logger)
 	r.HandleFunc("/signup", userHandler.SignUp).Methods("POST")
 	r.HandleFunc("/signin", userHandler.SignIn).Methods("POST")
+	r.HandleFunc("/signout", userHandler.SignOut).Methods("POST")
 
 	orderHandler := handlers.NewOrder(db, logger)
-	r.Handle("/orders", isAuthorizedMiddleware(orderHandler.GetUserOrders)).Methods("GET")
-	r.Handle("/orders", isAuthorizedMiddleware(orderHandler.CreateOrder)).Methods("POST")
-	r.Handle("/orders/{id:[0-9]+}", isAuthorizedMiddleware(orderHandler.GetUserOrder)).Methods("GET")
-	r.Handle("/orders/{id:[0-9]+}", isAuthorizedMiddleware(orderHandler.UpdateOrder)).Methods("PUT")
-	r.Handle("/orders/{id:[0-9]+}", isAuthorizedMiddleware(orderHandler.DeleteOrder)).Methods("DELETE")
+	r.Handle("/orders", authMiddleware.IsAuthorized(orderHandler.GetUserOrders)).Methods("GET")
+	r.Handle("/orders", authMiddleware.IsAuthorized(orderHandler.CreateOrder)).Methods("POST")
+	r.Handle("/orders/{id:[0-9]+}", authMiddleware.IsAuthorized(orderHandler.GetUserOrder)).Methods("GET")
+	r.Handle("/orders/{id:[0-9]+}", authMiddleware.IsAuthorized(orderHandler.UpdateOrder)).Methods("PUT")
+	r.Handle("/orders/{id:[0-9]+}", authMiddleware.IsAuthorized(orderHandler.DeleteOrder)).Methods("DELETE")
 
 	logger.Info("Starting service", "bind", conf.BindAddress, "metrics", conf.MetricsAddress)
 	err = http.ListenAndServe(conf.BindAddress, r)
 	if err != nil {
 		logger.Error("Unable to start server", "bind", conf.BindAddress, "error", err)
 	}
-}
-
-// isAuthorizedMiddleware
-func isAuthorizedMiddleware(next func(userID int, w http.ResponseWriter, r *http.Request)) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		authToken := r.Header.Get("Authorization")
-
-		token, err := jwt.Parse(authToken, func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				logger.Error("Unable to parse JWT token", "path", r.URL.Path)
-				http.Error(w, "Unauthorized", http.StatusUnauthorized)
-				return nil, nil
-			}
-			return []byte(jwtSecret), nil
-		})
-
-		if err != nil {
-			logger.Error("Unauthorized", "error", err)
-			http.Error(w, err.Error(), http.StatusUnauthorized)
-			return
-		}
-
-		// if token is valid
-		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-			userID := int(claims["user_id"].(float64))
-			next(userID, w, r)
-			return
-		}
-
-		logger.Error("Invalid Token", "error", err)
-		http.Error(w, err.Error(), http.StatusUnauthorized)
-		return
-	})
 }
 
 // retryDBUntilReady keeps retrying the database connection
