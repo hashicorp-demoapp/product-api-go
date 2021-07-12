@@ -152,4 +152,6 @@ func (c *User) SignOut(rw http.ResponseWriter, r *http.Request) {
 		http.Error(rw, "Unable to sign out user", http.StatusInternalServerError)
 		return
 	}
+
+	fmt.Fprintf(rw, "%s", "Signed out user")
 }

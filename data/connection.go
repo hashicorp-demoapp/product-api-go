@@ -1,6 +1,8 @@
 package data
 
 import (
+	"fmt"
+
 	"github.com/hashicorp-demoapp/product-api-go/data/model"
 	//"database/sql"
 	"github.com/jmoiron/sqlx"
@@ -136,7 +138,7 @@ func (c *PostgresSQL) CreateToken(userID int) (model.Token, error) {
 
 	rows, err := c.db.NamedQuery(
 		`INSERT INTO tokens (user_id, created_at) 
-		VALUES(:user_id, now(), now()) 
+		VALUES(:user_id, now()) 
 		RETURNING id;`, map[string]interface{}{
 			"user_id": userID,
 		})
@@ -161,11 +163,15 @@ func (c *PostgresSQL) GetToken(tokenID int, userID int) (model.Token, error) {
 
 	err := c.db.Select(&token,
 		`SELECT id, user_id FROM tokens 
-		WHERE id = $1 AND user_id = $2;`,
+		WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL;`,
 		tokenID, userID,
 	)
 	if err != nil {
-		return token[0], err
+		return model.Token{}, err
+	}
+
+	if len(token) == 0 {
+		return model.Token{}, fmt.Errorf("Invalid token")
 	}
 
 	return token[0], nil
