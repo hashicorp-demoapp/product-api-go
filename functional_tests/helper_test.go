@@ -31,18 +31,22 @@ func (api *apiFeature) initHandlers() {
 	// User
 	mc.On("CreateUser").Return(model.User{ID: 1, Username: "User1"}, nil)
 	mc.On("AuthUser").Return(model.User{ID: 1, Username: "User1"}, nil)
+	// Token
+	mc.On("CreateToken").Return(model.Token{ID: 1, UserID: 1}, nil)
+	mc.On("GetToken").Return(model.Token{ID: 1, UserID: 1}, nil)
+	mc.On("DeleteToken").Return(nil)
 	// Order
 	testOrder := model.Order{
 		ID: 1,
 		Items: []model.OrderItems{
-			model.OrderItems{
+			{
 				Coffee: model.Coffee{
 					ID:   1,
 					Name: "Latte",
 				},
 				Quantity: 1,
 			},
-			model.OrderItems{
+			{
 				Coffee: model.Coffee{
 					ID:   2,
 					Name: "Mocha",
@@ -109,6 +113,9 @@ func (api *apiFeature) initRouter(method, endpoint string, userID *string) error
 	if strings.Contains(endpoint, "/signin") {
 		api.hu.SignIn(api.rw, api.r)
 	}
+	if strings.Contains(endpoint, "/signout") {
+		api.hu.SignOut(api.rw, api.r)
+	}
 	return nil
 }
 
@@ -156,6 +163,24 @@ func (api *apiFeature) iMakeARequestToWithTheFollowingRequestBody(method, endpoi
 
 	rb := strings.NewReader(body.Content)
 	api.r.Body = ioutil.NopCloser(rb)
+
+	err := api.initRouter(method, endpoint, nil)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (api *apiFeature) iMakeARequestToWhereTheRequestHeaderIsWithTheValue(method, endpoint, header, value string) error {
+	api.rw = httptest.NewRecorder()
+	api.r = httptest.NewRequest(method, endpoint, nil)
+
+	api.r.Header = http.Header{
+		header: {
+			value,
+		},
+	}
 
 	err := api.initRouter(method, endpoint, nil)
 	if err != nil {

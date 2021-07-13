@@ -28,11 +28,11 @@ func TestOrdersSerializesToJSON(t *testing.T) {
 		Order{
 			ID: 1,
 			Items: []OrderItems{
-				OrderItems{
+				{
 					Coffee:   Coffee{ID: 0},
 					Quantity: 1,
 				},
-				OrderItems{
+				{
 					Coffee:   Coffee{ID: 1},
 					Quantity: 2,
 				},

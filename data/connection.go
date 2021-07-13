@@ -1,6 +1,8 @@
 package data
 
 import (
+	"fmt"
+
 	"github.com/hashicorp-demoapp/product-api-go/data/model"
 	//"database/sql"
 	"github.com/jmoiron/sqlx"
@@ -13,6 +15,9 @@ type Connection interface {
 	GetIngredientsForCoffee(int) (model.Ingredients, error)
 	CreateUser(string, string) (model.User, error)
 	AuthUser(string, string) (model.User, error)
+	CreateToken(int) (model.Token, error)
+	GetToken(int, int) (model.Token, error)
+	DeleteToken(int, int) error
 	GetOrders(int, *int) (model.Orders, error)
 	CreateOrder(int, []model.OrderItems) (model.Order, error)
 	UpdateOrder(int, int, []model.OrderItems) (model.Order, error)
@@ -125,6 +130,74 @@ func (c *PostgresSQL) AuthUser(username string, password string) (model.User, er
 	}
 
 	return us[0], nil
+}
+
+// CreateToken creates a new token
+func (c *PostgresSQL) CreateToken(userID int) (model.Token, error) {
+	token := model.Token{}
+
+	rows, err := c.db.NamedQuery(
+		`INSERT INTO tokens (user_id, created_at) 
+		VALUES(:user_id, now()) 
+		RETURNING id;`, map[string]interface{}{
+			"user_id": userID,
+		})
+	if err != nil {
+		return token, err
+	}
+	defer rows.Close()
+
+	if rows.Next() {
+		err := rows.StructScan(&token)
+		if err != nil {
+			return token, err
+		}
+	}
+
+	return token, nil
+}
+
+// GetToken checks whether token exists
+func (c *PostgresSQL) GetToken(tokenID int, userID int) (model.Token, error) {
+	token := []model.Token{}
+
+	err := c.db.Select(&token,
+		`SELECT id, user_id FROM tokens 
+		WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL;`,
+		tokenID, userID,
+	)
+	if err != nil {
+		return model.Token{}, err
+	}
+
+	if len(token) == 0 {
+		return model.Token{}, fmt.Errorf("Invalid token")
+	}
+
+	return token[0], nil
+}
+
+// DeleteToken deletes an existing token in the database
+func (c *PostgresSQL) DeleteToken(tokenID int, userID int) error {
+	tx := c.db.MustBegin()
+
+	_, err := tx.NamedExec(
+		`UPDATE tokens SET deleted_at = now()
+		WHERE id = :token_id AND user_id = :user_id AND deleted_at IS NULL`, map[string]interface{}{
+			"token_id": tokenID,
+			"user_id":  userID,
+		})
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // GetOrders returns orders from the database

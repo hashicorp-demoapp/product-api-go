@@ -78,6 +78,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^I make a "([^"]*)" request to "([^"]*)" where my userID is "([^"]*)" with the following request body:$`, api.iMakeARequestToWhereMyUserIDIsWithTheFollowingRequestBody)
 	s.Step(`^I make a "([^"]*)" request to "([^"]*)" where "([^"]*)" is "([^"]*)" and my userID is "([^"]*)"$`, api.iMakeARequestToWhereIsAndMyUserIDIs)
 	s.Step(`^I make a "([^"]*)" request to "([^"]*)" where "([^"]*)" is "([^"]*)" and my userID is "([^"]*)", with the following request body:$`, api.iMakeARequestToWhereIsAndMyUserIDIsWithTheFollowingRequestBody)
+	s.Step(`^I make a "([^"]*)" request to "([^"]*)" where the request header is "([^"]*)" with the value "([^"]*)":$`, api.iMakeARequestToWhereTheRequestHeaderIsWithTheValue)
 
 	s.Step(`^a list of products should be returned$`, api.aListOfProductsShouldBeReturned)
 	s.Step(`^a list of the product\'s ingredients should be returned$`, api.thatProductsIngredientsShouldBeReturned)
