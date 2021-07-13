@@ -22,5 +22,5 @@ Feature: Basic User Functionality
 
   Scenario: Sign out user
     Given the server is running
-    When I make a "POST" request to "/signout" where the request header is "Authorization" with the value "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MjYxODc2NjYsInRva2VuX2lkIjoyLCJ1c2VyX2lkIjoxLCJ1c2VybmFtZSI6IlVzZXIxIn0.xprj5axiIs2NyrIVHJt_1G4eG3cDkHC1p84vhOsx4JI":
+    When I make a "POST" request to "/signout" where the request header is "Authorization" with the value "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl9pZCI6MiwidXNlcl9pZCI6MSwidXNlcm5hbWUiOiJVc2VyMSJ9.D0DltVBYHrFwL4GJO3x1K0ZieFhmwAHcVLIMIzDQ-Ek":
     Then the response status should be "OK"

@@ -80,7 +80,6 @@ func TestSignOutUser(t *testing.T) {
 	c, rw := setupUserHandler(t)
 
 	token, err := c.generateJWTToken(1, "User1")
-	fmt.Println(token)
 	assert.NoError(t, err)
 
 	r := httptest.NewRequest("POST", "/signout", nil)
