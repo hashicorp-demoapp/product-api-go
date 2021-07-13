@@ -8,7 +8,7 @@ container "db" {
     }
 
     image {
-        name = "hashicorpdemoapp/product-api-db:v0.0.16"
+        name = "hashicorpdemoapp/product-api-db:v0.0.17"
     }
 
     env {
@@ -39,7 +39,7 @@ container "api" {
     }
 
     image {
-        name = "hashicorpdemoapp/product-api:v0.0.16"
+        name = "hashicorpdemoapp/product-api:v0.0.17"
     }
 
     volume {
