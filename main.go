@@ -55,13 +55,15 @@ func main() {
 		MetricsAddress: *metricsAddress,
 	}
 
-	// load the config
-	c, err := config.New(*configFile, conf, configUpdated)
-	if err != nil {
-		logger.Error("Unable to load config file", "error", err)
-		os.Exit(1)
+	// load the config, unless provided by env
+	if conf.DBConnection == "" || conf.BindAddress == "" {
+		c, err := config.New(*configFile, conf, configUpdated)
+		if err != nil {
+			logger.Error("Unable to load config file", "error", err)
+			os.Exit(1)
+		}
+		defer c.Close()
 	}
-	defer c.Close()
 
 	// configure the telemetry
 	t := telemetry.New(conf.MetricsAddress)
