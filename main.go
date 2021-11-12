@@ -27,9 +27,9 @@ var conf *Config
 var logger hclog.Logger
 
 var configFile = env.String("CONFIG_FILE", false, "./conf.json", "Path to JSON encoded config file")
-var dbConnection = env.String("DB_CONNECTION", false, "host=localhost port=5432 user=postgres password=password dbname=products sslmode=disable", "db connection string")
-var bindAddress = env.String("BIND_ADDRESS", false, "0.0.0.0:9090", "Bind address")
-var metricsAddress = env.String("METRICS_ADDRESS", false, "0.0.0.0:9091", "Metrics address")
+var dbConnection = env.String("DB_CONNECTION", false, "", "db connection string")
+var bindAddress = env.String("BIND_ADDRESS", false, "", "Bind address")
+var metricsAddress = env.String("METRICS_ADDRESS", false, "", "Metrics address")
 
 const jwtSecret = "test"
 
