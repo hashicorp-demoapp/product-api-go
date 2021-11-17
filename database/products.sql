@@ -67,27 +67,38 @@ INSERT INTO ingredients (id, name, created_at, updated_at) VALUES (2, 'Semi Skim
 INSERT INTO ingredients (id, name, created_at, updated_at) VALUES (3, 'Hot Water', CURRENT_DATE, CURRENT_DATE);
 INSERT INTO ingredients (id, name, created_at, updated_at) VALUES (4, 'Pumpkin Spice', CURRENT_DATE, CURRENT_DATE);
 INSERT INTO ingredients (id, name, created_at, updated_at) VALUES (5, 'Steamed Milk', CURRENT_DATE, CURRENT_DATE);
+INSERT INTO ingredients (id, name, created_at, updated_at) VALUES (6, 'Coffee', CURRENT_DATE, CURRENT_DATE);
 
+INSERT INTO coffees (name, teaser, description, price, image, created_at, updated_at) VALUES ('HashiCup', 'Automation in a cup', '', 200, '/hashicorp.png', CURRENT_DATE, CURRENT_DATE);
+INSERT INTO coffee_ingredients (coffee_id, ingredient_id, quantity, unit, created_at, updated_at) VALUES (1,6, 350, 'ml', CURRENT_DATE, CURRENT_DATE);
 
 INSERT INTO coffees (name, teaser, description, price, image, created_at, updated_at) VALUES ('Packer Spiced Latte', 'Packed with goodness to spice up your images', '', 350, '/packer.png', CURRENT_DATE, CURRENT_DATE);
-INSERT INTO coffee_ingredients (coffee_id, ingredient_id, quantity, unit, created_at, updated_at) VALUES (1,1, 40, 'ml', CURRENT_DATE, CURRENT_DATE);
-INSERT INTO coffee_ingredients (coffee_id, ingredient_id, quantity, unit, created_at, updated_at) VALUES (1,2, 300, 'ml', CURRENT_DATE, CURRENT_DATE);
-INSERT INTO coffee_ingredients (coffee_id, ingredient_id, quantity, unit, created_at, updated_at) VALUES (1,4, 5, 'g', CURRENT_DATE, CURRENT_DATE);
-
-INSERT INTO coffees (name, teaser, description, price, image, created_at, updated_at) VALUES ('Vaulatte', 'Nothing gives you a safe and secure feeling like a Vaulatte', '', 200, '/vault.png', CURRENT_DATE, CURRENT_DATE);
 INSERT INTO coffee_ingredients (coffee_id, ingredient_id, quantity, unit, created_at, updated_at) VALUES (2,1, 40, 'ml', CURRENT_DATE, CURRENT_DATE);
 INSERT INTO coffee_ingredients (coffee_id, ingredient_id, quantity, unit, created_at, updated_at) VALUES (2,2, 300, 'ml', CURRENT_DATE, CURRENT_DATE);
+INSERT INTO coffee_ingredients (coffee_id, ingredient_id, quantity, unit, created_at, updated_at) VALUES (2,4, 5, 'g', CURRENT_DATE, CURRENT_DATE);
+
+INSERT INTO coffees (name, teaser, description, price, image, created_at, updated_at) VALUES ('Vaulatte', 'Nothing gives you a safe and secure feeling like a Vaulatte', '', 200, '/vault.png', CURRENT_DATE, CURRENT_DATE);
+INSERT INTO coffee_ingredients (coffee_id, ingredient_id, quantity, unit, created_at, updated_at) VALUES (3,1, 40, 'ml', CURRENT_DATE, CURRENT_DATE);
+INSERT INTO coffee_ingredients (coffee_id, ingredient_id, quantity, unit, created_at, updated_at) VALUES (3,2, 300, 'ml', CURRENT_DATE, CURRENT_DATE);
 
 INSERT INTO coffees (name, teaser, description, price, image, created_at, updated_at) VALUES ('Nomadicano', 'Drink one today and you will want to schedule another', '', 150, '/nomad.png', CURRENT_DATE, CURRENT_DATE);
-INSERT INTO coffee_ingredients (coffee_id, ingredient_id, quantity, unit, created_at, updated_at) VALUES (3,1, 20, 'ml', CURRENT_DATE, CURRENT_DATE);
-INSERT INTO coffee_ingredients (coffee_id, ingredient_id, quantity, unit, created_at, updated_at) VALUES (3,3, 100, 'ml', CURRENT_DATE, CURRENT_DATE);
+INSERT INTO coffee_ingredients (coffee_id, ingredient_id, quantity, unit, created_at, updated_at) VALUES (4,1, 20, 'ml', CURRENT_DATE, CURRENT_DATE);
+INSERT INTO coffee_ingredients (coffee_id, ingredient_id, quantity, unit, created_at, updated_at) VALUES (4,3, 100, 'ml', CURRENT_DATE, CURRENT_DATE);
 
 INSERT INTO coffees (name, teaser, description, price, image, created_at, updated_at) VALUES ('Terraspresso', 'Nothing kickstarts your day like a provision of Terraspresso', '', 150, '/terraform.png', CURRENT_DATE, CURRENT_DATE);
-INSERT INTO coffee_ingredients (coffee_id, ingredient_id, quantity, unit, created_at, updated_at) VALUES (4,1, 20, 'ml', CURRENT_DATE, CURRENT_DATE);
+INSERT INTO coffee_ingredients (coffee_id, ingredient_id, quantity, unit, created_at, updated_at) VALUES (5,1, 20, 'ml', CURRENT_DATE, CURRENT_DATE);
 
 INSERT INTO coffees (name, teaser, description, price, image, created_at, updated_at) VALUES ('Vagrante espresso', 'Stdin is not a tty', '', 200, '/vagrant.png', CURRENT_DATE, CURRENT_DATE);
-INSERT INTO coffee_ingredients (coffee_id, ingredient_id, quantity, unit, created_at, updated_at) VALUES (5,1, 40, 'ml', CURRENT_DATE, CURRENT_DATE);
+INSERT INTO coffee_ingredients (coffee_id, ingredient_id, quantity, unit, created_at, updated_at) VALUES (6,1, 40, 'ml', CURRENT_DATE, CURRENT_DATE);
 
 INSERT INTO coffees (name, teaser, description, price, image, created_at, updated_at) VALUES ('Connectaccino', 'Discover the wonders of our meshy service', '', 250, '/consul.png', CURRENT_DATE, CURRENT_DATE);
-INSERT INTO coffee_ingredients (coffee_id, ingredient_id, quantity, unit, created_at, updated_at) VALUES (6,1, 40, 'ml', CURRENT_DATE, CURRENT_DATE);
-INSERT INTO coffee_ingredients (coffee_id, ingredient_id, quantity, unit, created_at, updated_at) VALUES (6,5, 300, 'ml', CURRENT_DATE, CURRENT_DATE);
+INSERT INTO coffee_ingredients (coffee_id, ingredient_id, quantity, unit, created_at, updated_at) VALUES (7,1, 40, 'ml', CURRENT_DATE, CURRENT_DATE);
+INSERT INTO coffee_ingredients (coffee_id, ingredient_id, quantity, unit, created_at, updated_at) VALUES (7,5, 300, 'ml', CURRENT_DATE, CURRENT_DATE);
+
+INSERT INTO coffees (name, teaser, description, price, image, created_at, updated_at) VALUES ('Boundary Red Eye', 'Perk up and watch out for your access management', '', 200, '/boundary.png', CURRENT_DATE, CURRENT_DATE);
+INSERT INTO coffee_ingredients (coffee_id, ingredient_id, quantity, unit, created_at, updated_at) VALUES (8,1, 30, 'ml', CURRENT_DATE, CURRENT_DATE);
+INSERT INTO coffee_ingredients (coffee_id, ingredient_id, quantity, unit, created_at, updated_at) VALUES (8,6, 120, 'ml', CURRENT_DATE, CURRENT_DATE);
+
+INSERT INTO coffees (name, teaser, description, price, image, created_at, updated_at) VALUES ('Waypointiato', 'Deploy with a little foam', '', 250, '/waypoint.png', CURRENT_DATE, CURRENT_DATE);
+INSERT INTO coffee_ingredients (coffee_id, ingredient_id, quantity, unit, created_at, updated_at) VALUES (9,1, 60, 'ml', CURRENT_DATE, CURRENT_DATE);
+INSERT INTO coffee_ingredients (coffee_id, ingredient_id, quantity, unit, created_at, updated_at) VALUES (9,2, 30, 'ml', CURRENT_DATE, CURRENT_DATE);
