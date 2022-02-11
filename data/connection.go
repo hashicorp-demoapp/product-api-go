@@ -1,6 +1,8 @@
 package data
 
 import (
+	"errors"
+
 	"github.com/hashicorp-demoapp/product-api-go/data/model"
 
 	//"database/sql"
@@ -121,6 +123,11 @@ func (c *PostgresSQL) AuthUser(username string, password string) (model.User, er
 	)
 	if err != nil {
 		return us[0], err
+	}
+
+	// If user does not exist
+	if len(us) < 1 {
+		return us, errors.New("User does not exist")
 	}
 
 	return us[0], nil
