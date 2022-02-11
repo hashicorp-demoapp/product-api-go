@@ -25,6 +25,8 @@ type Coffee struct {
 	ID          int                `db:"id" json:"id"`
 	Name        string             `db:"name" json:"name"`
 	Teaser      string             `db:"teaser" json:"teaser"`
+	Collection  string             `db:"collection" json:"collection"`
+	Origin      string             `db:"origin" json:"origin"`
 	Description string             `db:"description" json:"description"`
 	Price       float64            `db:"price" json:"price"`
 	Image       string             `db:"image" json:"image"`
