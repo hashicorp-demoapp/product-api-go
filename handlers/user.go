@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/hashicorp-demoapp/product-api-go/data"
 	"github.com/hashicorp/go-hclog"
 )
@@ -67,7 +67,7 @@ func (c *User) SignUp(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokenString, err := generateJWTToken(u.ID, u.Username)
+	tokenString, err := c.generateJWTToken(u.ID, u.Username)
 	if err != nil {
 		c.log.Error("Unable to generate JWT token", "error", err)
 		http.Error(rw, "Unable to generate JWT token", http.StatusInternalServerError)
@@ -101,7 +101,7 @@ func (c *User) SignIn(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokenString, err := generateJWTToken(u.ID, u.Username)
+	tokenString, err := c.generateJWTToken(u.ID, u.Username)
 	if err != nil {
 		c.log.Error("Unable to generate JWT token", "error", err)
 		http.Error(rw, "Unable to generate JWT token", http.StatusInternalServerError)
@@ -115,12 +115,43 @@ func (c *User) SignIn(rw http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func generateJWTToken(id int, username string) (string, error) {
+func (c *User) generateJWTToken(userID int, username string) (string, error) {
+	t, err := c.con.CreateToken(userID)
+	if err != nil {
+		return "", err
+	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id":  id,
+		"token_id": t.ID,
+		"user_id":  userID,
 		"username": username,
 		"exp":      time.Now().Add(time.Hour * 24).Unix(),
 	})
 
 	return token.SignedString([]byte(jwtSecret))
+}
+
+func (c *User) invalidateJWTToken(authToken string) error {
+	tokenID, userID, err := ExtractJWT(authToken)
+	if err != nil {
+		return err
+	}
+	if err = c.con.DeleteToken(tokenID, userID); err != nil {
+		return err
+	}
+	return nil
+}
+
+// SignOut signs out a user and invalidates a JWT token
+func (c *User) SignOut(rw http.ResponseWriter, r *http.Request) {
+	c.log.Info("Handle User | signout")
+
+	authToken := r.Header.Get("Authorization")
+
+	if err := c.invalidateJWTToken(authToken); err != nil {
+		c.log.Error("Unable to sign out user", "error", err)
+		http.Error(rw, "Unable to sign out user", http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Fprintf(rw, "%s", "Signed out user")
 }

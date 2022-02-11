@@ -58,6 +58,39 @@ func (c *MockConnection) AuthUser(username string, password string) (model.User,
 	return model.User{}, args.Error(1)
 }
 
+// CreateToken -
+func (c *MockConnection) CreateToken(userID int) (model.Token, error) {
+	args := c.Called()
+
+	if m, ok := args.Get(0).(model.Token); ok {
+		return m, args.Error(1)
+	}
+
+	return model.Token{}, args.Error(1)
+}
+
+// GetToken -
+func (c *MockConnection) GetToken(tokenID int, userID int) (model.Token, error) {
+	args := c.Called()
+
+	if m, ok := args.Get(0).(model.Token); ok {
+		return m, args.Error(1)
+	}
+
+	return model.Token{}, args.Error(1)
+}
+
+// DeleteToken -
+func (c *MockConnection) DeleteToken(tokenID int, userID int) error {
+	args := c.Called()
+
+	if err, ok := args.Get(0).(error); ok {
+		return err
+	}
+
+	return nil
+}
+
 // GetOrders -
 func (c *MockConnection) GetOrders(userID int, orderID *int) (model.Orders, error) {
 	args := c.Called()
@@ -100,4 +133,26 @@ func (c *MockConnection) DeleteOrder(userID int, orderID int) error {
 	}
 
 	return nil
+}
+
+// CreateCoffee creates a new coffee type
+func (c *MockConnection) CreateCoffee(coffee model.Coffee) (model.Coffee, error) {
+	args := c.Called()
+
+	if m, ok := args.Get(0).(model.Coffee); ok {
+		return m, args.Error(1)
+	}
+
+	return model.Coffee{}, args.Error(1)
+}
+
+// UpsertCoffeeIngredient upserts a new coffee ingredient type
+func (c *MockConnection) UpsertCoffeeIngredient(coffee model.Coffee, ingredient model.Ingredient) (model.CoffeeIngredient, error) {
+	args := c.Called()
+
+	if m, ok := args.Get(0).(model.CoffeeIngredient); ok {
+		return m, args.Error(1)
+	}
+
+	return model.CoffeeIngredient{}, args.Error(1)
 }

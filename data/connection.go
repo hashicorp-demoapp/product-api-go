@@ -2,9 +2,9 @@ package data
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/hashicorp-demoapp/product-api-go/data/model"
-
 	//"database/sql"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -16,10 +16,15 @@ type Connection interface {
 	GetIngredientsForCoffee(int) (model.Ingredients, error)
 	CreateUser(string, string) (model.User, error)
 	AuthUser(string, string) (model.User, error)
+	CreateToken(int) (model.Token, error)
+	GetToken(int, int) (model.Token, error)
+	DeleteToken(int, int) error
 	GetOrders(int, *int) (model.Orders, error)
 	CreateOrder(int, []model.OrderItems) (model.Order, error)
 	UpdateOrder(int, int, []model.OrderItems) (model.Order, error)
 	DeleteOrder(int, int) error
+	CreateCoffee(model.Coffee) (model.Coffee, error)
+	UpsertCoffeeIngredient(model.Coffee, model.Ingredient) (model.CoffeeIngredient, error)
 }
 
 type PostgresSQL struct {
@@ -57,8 +62,8 @@ func (c *PostgresSQL) GetProducts() (model.Coffees, error) {
 
 	// fetch the ingredients for each coffee
 	for n, cof := range cos {
-		i := []model.CoffeeIngredients{}
-		err := c.db.Select(&i, "SELECT ingredient_id FROM coffee_ingredients WHERE coffee_id=$1", cof.ID)
+		i := []model.CoffeeIngredient{}
+		err := c.db.Select(&i, "SELECT ingredient_id FROM coffee_ingredients WHERE coffee_id=$1 AND quantity > 0", cof.ID)
 		if err != nil {
 			return nil, err
 		}
@@ -133,6 +138,74 @@ func (c *PostgresSQL) AuthUser(username string, password string) (model.User, er
 	return us[0], nil
 }
 
+// CreateToken creates a new token
+func (c *PostgresSQL) CreateToken(userID int) (model.Token, error) {
+	token := model.Token{}
+
+	rows, err := c.db.NamedQuery(
+		`INSERT INTO tokens (user_id, created_at) 
+		VALUES(:user_id, now()) 
+		RETURNING id;`, map[string]interface{}{
+			"user_id": userID,
+		})
+	if err != nil {
+		return token, err
+	}
+	defer rows.Close()
+
+	if rows.Next() {
+		err := rows.StructScan(&token)
+		if err != nil {
+			return token, err
+		}
+	}
+
+	return token, nil
+}
+
+// GetToken checks whether token exists
+func (c *PostgresSQL) GetToken(tokenID int, userID int) (model.Token, error) {
+	token := []model.Token{}
+
+	err := c.db.Select(&token,
+		`SELECT id, user_id FROM tokens 
+		WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL;`,
+		tokenID, userID,
+	)
+	if err != nil {
+		return model.Token{}, err
+	}
+
+	if len(token) == 0 {
+		return model.Token{}, fmt.Errorf("Invalid token")
+	}
+
+	return token[0], nil
+}
+
+// DeleteToken deletes an existing token in the database
+func (c *PostgresSQL) DeleteToken(tokenID int, userID int) error {
+	tx := c.db.MustBegin()
+
+	_, err := tx.NamedExec(
+		`UPDATE tokens SET deleted_at = now()
+		WHERE id = :token_id AND user_id = :user_id AND deleted_at IS NULL`, map[string]interface{}{
+			"token_id": tokenID,
+			"user_id":  userID,
+		})
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // GetOrders returns orders from the database
 func (c *PostgresSQL) GetOrders(userID int, orderID *int) (model.Orders, error) {
 	orders := model.Orders{}
@@ -173,6 +246,14 @@ func (c *PostgresSQL) GetOrders(userID int, orderID *int) (model.Orders, error) 
 
 			if len(coffee) > 0 {
 				orders[n].Items[i].Coffee = coffee[0]
+
+				ing := []model.CoffeeIngredient{}
+				err := c.db.Select(&ing, "SELECT ingredient_id FROM coffee_ingredients WHERE coffee_id=$1 AND quantity > 0", orders[n].Items[i].Coffee.ID)
+				if err != nil {
+					return nil, err
+				}
+
+				orders[n].Items[i].Coffee.Ingredients = ing
 			}
 		}
 	}
@@ -332,4 +413,63 @@ func (c *PostgresSQL) DeleteOrder(userID int, orderID int) error {
 	}
 
 	return nil
+}
+
+// CreateCoffee creates a new coffee
+func (c *PostgresSQL) CreateCoffee(coffee model.Coffee) (model.Coffee, error) {
+	m := model.Coffee{}
+
+	rows, err := c.db.NamedQuery(
+		`INSERT INTO coffees (name, teaser, description, price, image, created_at, updated_at) 
+		VALUES(:name, :teaser, :description, :price, :image, now(), now()) 
+		RETURNING id;`, map[string]interface{}{
+			"name":        coffee.Name,
+			"teaser":      coffee.Teaser,
+			"description": coffee.Description,
+			"price":       coffee.Price,
+			"image":       coffee.Image,
+		})
+	if err != nil {
+		return m, err
+	}
+	defer rows.Close()
+
+	if rows.Next() {
+		err := rows.StructScan(&m)
+		if err != nil {
+			return m, err
+		}
+	}
+
+	return m, nil
+}
+
+// UpsertCoffeeIngredient upserts a new coffee ingredient
+func (c *PostgresSQL) UpsertCoffeeIngredient(coffee model.Coffee, ingredient model.Ingredient) (model.CoffeeIngredient, error) {
+	i := model.CoffeeIngredient{}
+
+	rows, err := c.db.NamedQuery(
+		`INSERT INTO coffee_ingredients (coffee_id, ingredient_id, quantity, unit, created_at, updated_at) 
+		VALUES(:coffee_id, :ingredient_id, :quantity, :unit, now(), now()) 
+		ON CONFLICT ON CONSTRAINT unique_coffee_ingredient
+		DO UPDATE SET quantity = :quantity, unit = :unit
+		RETURNING id;`, map[string]interface{}{
+			"coffee_id":     coffee.ID,
+			"ingredient_id": ingredient.ID,
+			"quantity":      ingredient.Quantity,
+			"unit":          ingredient.Unit,
+		})
+	if err != nil {
+		return i, err
+	}
+	defer rows.Close()
+
+	if rows.Next() {
+		err := rows.StructScan(&i)
+		if err != nil {
+			return i, err
+		}
+	}
+
+	return i, nil
 }

@@ -58,6 +58,7 @@ type apiFeature struct {
 	hc *handlers.Coffee
 	hu *handlers.User
 	ho *handlers.Order
+	hi *handlers.Ingredients
 	rw *httptest.ResponseRecorder
 	r  *http.Request
 }
@@ -77,12 +78,15 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^I make a "([^"]*)" request to "([^"]*)" where my userID is "([^"]*)" with the following request body:$`, api.iMakeARequestToWhereMyUserIDIsWithTheFollowingRequestBody)
 	s.Step(`^I make a "([^"]*)" request to "([^"]*)" where "([^"]*)" is "([^"]*)" and my userID is "([^"]*)"$`, api.iMakeARequestToWhereIsAndMyUserIDIs)
 	s.Step(`^I make a "([^"]*)" request to "([^"]*)" where "([^"]*)" is "([^"]*)" and my userID is "([^"]*)", with the following request body:$`, api.iMakeARequestToWhereIsAndMyUserIDIsWithTheFollowingRequestBody)
+	s.Step(`^I make a "([^"]*)" request to "([^"]*)" where the request header is "([^"]*)" with the value "([^"]*)":$`, api.iMakeARequestToWhereTheRequestHeaderIsWithTheValue)
 
 	s.Step(`^a list of products should be returned$`, api.aListOfProductsShouldBeReturned)
 	s.Step(`^a list of the product\'s ingredients should be returned$`, api.thatProductsIngredientsShouldBeReturned)
 	s.Step(`^an AuthResponse should be returned$`, api.theAuthResponseShouldBeReturned)
 	s.Step(`^a list of orders should be returned$`, api.aListOfOrdersShouldBeReturned)
 	s.Step(`^an order should be returned$`, api.anOrderShouldBeReturned)
+	s.Step(`^a coffee should be returned$`, api.aCoffeeShouldBeReturned)
+	s.Step(`^a coffee ingredient should be returned$`, api.aCoffeeIngredientShouldBeReturned)
 
 	s.Step(`^the response status should be "([^"]*)"$`, api.theResponseStatusShouldBe)
 }
