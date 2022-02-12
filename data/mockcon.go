@@ -15,7 +15,7 @@ func (c *MockConnection) IsConnected() (bool, error) {
 }
 
 // GetCoffees -
-func (c *MockConnection) GetCoffees() (model.Coffees, error) {
+func (c *MockConnection) GetCoffees(*int) (model.Coffees, error) {
 	args := c.Called()
 
 	if m, ok := args.Get(0).(model.Coffees); ok {
