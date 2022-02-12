@@ -16,9 +16,8 @@ import (
 
 func setupCoffeeHandler() (*Coffee, *httptest.ResponseRecorder) {
 	c := &data.MockConnection{}
-	c.On("GetProducts").Return(model.Coffees{model.Coffee{ID: 1, Name: "Test"}}, nil)
+	c.On("GetCoffees").Return(model.Coffees{model.Coffee{ID: 1, Name: "Test"}}, nil)
 	c.On("CreateCoffee").Return(model.Coffees{model.Coffee{ID: 1, Name: "Test"}}, nil)
-	c.On("GetProductByName").Return(nil, nil)
 
 	l := hclog.Default()
 

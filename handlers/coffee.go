@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
+	"github.com/gorilla/mux"
 	"github.com/hashicorp-demoapp/product-api-go/data"
 	"github.com/hashicorp-demoapp/product-api-go/data/model"
 	"github.com/hashicorp/go-hclog"
@@ -24,16 +26,32 @@ func NewCoffee(con data.Connection, l hclog.Logger) *Coffee {
 func (c *Coffee) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	c.log.Info("Handle Coffee")
 
-	prods, err := c.con.GetProducts()
+	vars := mux.Vars(r)
+
+	var coffeeID *int
+
+	if vars["id"] != "" {
+		cId, err := strconv.Atoi(vars["id"])
+		if err != nil {
+			c.log.Error("CoffeeID provided could not be converted to an integer", "error", err)
+			http.Error(rw, "Unable to list ingredients", http.StatusInternalServerError)
+			return
+		}
+		coffeeID = &cId
+	}
+
+	cofs, err := c.con.GetCoffees(coffeeID)
 	if err != nil {
 		c.log.Error("Unable to get products from database", "error", err)
 		http.Error(rw, "Unable to list products", http.StatusInternalServerError)
+		return
 	}
 
-	d, err := prods.ToJSON()
+	d, err := cofs.ToJSON()
 	if err != nil {
 		c.log.Error("Unable to convert products to JSON", "error", err)
 		http.Error(rw, "Unable to list products", http.StatusInternalServerError)
+		return
 	}
 
 	rw.Write(d)
@@ -63,6 +81,7 @@ func (c *Coffee) CreateCoffee(_ int, rw http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		c.log.Error("Unable to convert coffee to JSON", "error", err)
 		http.Error(rw, "Unable to create new coffee", http.StatusInternalServerError)
+		return
 	}
 
 	rw.Write(d)
