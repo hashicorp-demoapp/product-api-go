@@ -50,8 +50,8 @@ func main() {
 	defer closer.Close()
 
 	conf = &Config{
-		DBConnection: *dbConnection,
-		BindAddress: *bindAddress,
+		DBConnection:   *dbConnection,
+		BindAddress:    *bindAddress,
 		MetricsAddress: *metricsAddress,
 	}
 
@@ -85,6 +85,7 @@ func main() {
 
 	coffeeHandler := handlers.NewCoffee(db, logger)
 	r.Handle("/coffees", coffeeHandler).Methods("GET")
+	r.Handle("/coffees/{id:[0-9]+}", coffeeHandler).Methods("GET")
 	r.Handle("/coffees", authMiddleware.IsAuthorized(coffeeHandler.CreateCoffee)).Methods("POST")
 
 	ingredientsHandler := handlers.NewIngredients(db, logger)

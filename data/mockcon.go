@@ -14,8 +14,8 @@ func (c *MockConnection) IsConnected() (bool, error) {
 	return true, nil
 }
 
-// GetProducts -
-func (c *MockConnection) GetProducts() (model.Coffees, error) {
+// GetCoffees -
+func (c *MockConnection) GetCoffees(*int) (model.Coffees, error) {
 	args := c.Called()
 
 	if m, ok := args.Get(0).(model.Coffees); ok {

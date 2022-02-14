@@ -20,7 +20,7 @@ import (
 func (api *apiFeature) initHandlers() {
 	// Coffee
 	mc := &data.MockConnection{}
-	mc.On("GetProducts").Return(model.Coffees{model.Coffee{ID: 1, Name: "Test"}}, nil)
+	mc.On("GetCoffees").Return(model.Coffees{model.Coffee{ID: 1, Name: "Test"}}, nil)
 	mc.On("CreateCoffee").Return(model.Coffee{ID: 1, Name: "Test"}, nil)
 	mc.On("UpsertCoffeeIngredient").Return(model.CoffeeIngredient{ID: 1, CoffeeID: 1, IngredientID: 3}, nil)
 	mc.On("GetIngredientsForCoffee").Return(model.Ingredients{

@@ -1,6 +1,7 @@
 package data
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/hashicorp-demoapp/product-api-go/data/model"
@@ -11,7 +12,7 @@ import (
 
 type Connection interface {
 	IsConnected() (bool, error)
-	GetProducts() (model.Coffees, error)
+	GetCoffees(*int) (model.Coffees, error)
 	GetIngredientsForCoffee(int) (model.Ingredients, error)
 	CreateUser(string, string) (model.User, error)
 	AuthUser(string, string) (model.User, error)
@@ -50,13 +51,20 @@ func (c *PostgresSQL) IsConnected() (bool, error) {
 	return true, nil
 }
 
-// GetProducts returns all products from the database
-func (c *PostgresSQL) GetProducts() (model.Coffees, error) {
+// GetCoffees returns all coffees from the database
+func (c *PostgresSQL) GetCoffees(coffeeid *int) (model.Coffees, error) {
 	cos := model.Coffees{}
 
-	err := c.db.Select(&cos, "SELECT * FROM coffees")
-	if err != nil {
-		return nil, err
+	if coffeeid != nil {
+		err := c.db.Select(&cos, "SELECT * FROM coffees WHERE id = $1", &coffeeid)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		err := c.db.Select(&cos, "SELECT * FROM coffees")
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// fetch the ingredients for each coffee
@@ -126,7 +134,12 @@ func (c *PostgresSQL) AuthUser(username string, password string) (model.User, er
 		username, password,
 	)
 	if err != nil {
-		return us[0], err
+		return model.User{}, err
+	}
+
+	// If user does not exist
+	if len(us) < 1 {
+		return model.User{}, errors.New("User does not exist")
 	}
 
 	return us[0], nil
