@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp-demoapp/go-hckit"
 	"github.com/nicholasjackson/env"
+	"github.com/rs/cors"
 
 	"github.com/gorilla/mux"
 	"github.com/hashicorp-demoapp/product-api-go/config"
@@ -77,6 +78,13 @@ func main() {
 
 	r := mux.NewRouter()
 	r.Use(hckit.TracingMiddleware)
+
+	// Enable CORS for all hosts
+	r.Use(cors.New(cors.Options{
+		AllowedOrigins: []string{"*"},
+		AllowedMethods: []string{"POST", "GET", "OPTIONS", "PUT", "DELETE"},
+		AllowedHeaders: []string{"Accept", "content-type", "Content-Length", "Accept-Encoding", "X-CSRF-Token", "Authorization"},
+	}).Handler)
 
 	authMiddleware := handlers.NewAuthMiddleware(db, logger)
 
