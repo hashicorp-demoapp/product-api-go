@@ -16,6 +16,7 @@ require (
 	github.com/lib/pq v1.2.0
 	github.com/mattn/go-sqlite3 v1.11.0 // indirect
 	github.com/nicholasjackson/env v0.5.0
+	github.com/rs/cors v1.8.2
 	github.com/stretchr/testify v1.7.0
 	go.opentelemetry.io/otel v0.2.0
 	go.opentelemetry.io/otel/exporter/metric/prometheus v0.2.0
@@ -43,7 +44,6 @@ require (
 	github.com/prometheus/client_model v0.0.0-20190129233127-fd36f4220a90 // indirect
 	github.com/prometheus/common v0.4.0 // indirect
 	github.com/prometheus/procfs v0.0.0-20190507164030-5867b95ac084 // indirect
-	github.com/rs/cors v1.8.2 // indirect
 	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/uber/jaeger-client-go v2.25.0+incompatible // indirect
 	github.com/uber/jaeger-lib v2.4.0+incompatible // indirect
