@@ -90,6 +90,8 @@ func main() {
 
 	healthHandler := handlers.NewHealth(t, logger, db)
 	r.Handle("/health", healthHandler).Methods("GET")
+	r.HandleFunc("/health/livez", healthHandler.Liveness).Methods("GET")
+	r.HandleFunc("/health/readyz", healthHandler.Readiness).Methods("GET")
 
 	coffeeHandler := handlers.NewCoffee(db, logger)
 	r.Handle("/coffees", coffeeHandler).Methods("GET")

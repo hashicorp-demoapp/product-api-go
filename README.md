@@ -67,6 +67,15 @@ The API is available at `http://localhost:19090`
 he wonders of our meshy service","description":"","price":250,"image":"/consul.png","ingredients":[{"ingredient_id":1},{"ingredient_id":5}]}]%   
 ```
 
+## Endpoints
+
+Some notes on select API endpoints:
+| Endpoint | Description |
+| --- | --- |
+| '/health' | (DEPRECATED) Health check endpoint that verifies DB connectivity. This has been replaced by `/health/readyz` |
+| '/health/livez' | Health check endpoint that verifies the server has started. |
+| '/health/readyz' | Health check endpoint that verifies the server is connected to the DB and ready to serve requests. |
+
 ## Requesting changes / Governance
 This API is shared by multiple teams and therefore we require some form of process to ensure new features or changes do not break functionality
 relied on by others. To make changes to the API:
