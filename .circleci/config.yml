@@ -28,10 +28,10 @@ commands:
 jobs:
   build-go:
     docker:
-      - image: circleci/golang:1.17
+      - image: cimg/go:1.17
     environment:
       GO111MODULE: "on"
-    working_directory: /go/src/github.com/hashicorpdemoapp/product-api-go
+    working_directory: ~/go/src/github.com/hashicorpdemoapp/product-api-go
     steps:
       - checkout
       - run:
@@ -47,20 +47,20 @@ jobs:
           name: build application (arm64)
           command: CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o ./bin/arm64/product-api
       - persist_to_workspace:
-          root: /go/src/github.com/hashicorpdemoapp
+          root: ~/go/src/github.com/hashicorpdemoapp
           paths:
             - product-api-go
 
   functional_test:
-    docker:
-      - image: circleci/golang:1.17
+    machine:
+      image: ubuntu-2004:current
+    resource_class: medium
     environment:
       GO111MODULE: "on"
-    working_directory: /go/src/github.com/hashicorpdemoapp/product-api-go
+    working_directory: ~/go/src/github.com/hashicorpdemoapp/product-api-go
     steps:
-      - setup_remote_docker
       - attach_workspace:
-          at: /go/src/github.com/hashicorpdemoapp
+          at: ~/go/src/github.com/hashicorpdemoapp
       - run:
           name: install shipyard
           command: |
