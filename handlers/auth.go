@@ -5,18 +5,24 @@ import (
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/hashicorp-demoapp/product-api-go/data"
+	"github.com/hashicorp-demoapp/product-api-go/telemetry"
 	"github.com/hashicorp/go-hclog"
 )
 
 // Middleware -
 type AuthMiddleware struct {
-	con data.Connection
-	log hclog.Logger
+	log       hclog.Logger
+	telemetry *telemetry.Telemetry
+	con       data.Connection
 }
 
 // NewMiddleware -
-func NewAuthMiddleware(con data.Connection, l hclog.Logger) *AuthMiddleware {
-	return &AuthMiddleware{con, l}
+func NewAuthMiddleware(t *telemetry.Telemetry, l hclog.Logger, con data.Connection) *AuthMiddleware {
+	t.AddMeasure("auth.extract_jwt")
+	t.AddMeasure("auth.verify_jwt")
+	t.AddMeasure("auth.is_auth")
+
+	return &AuthMiddleware{l, t, con}
 }
 
 // ExtractJWT retrieves the token and user ID from the JWT
@@ -41,6 +47,9 @@ func ExtractJWT(authToken string) (int, int, error) {
 }
 
 func (c *AuthMiddleware) VerifyJWT(authToken string) (int, error) {
+	done := c.telemetry.NewTiming("auth.verify_jwt")
+	defer done()
+
 	tokenID, userID, err := ExtractJWT(authToken)
 	if err != nil {
 		return userID, err
@@ -53,6 +62,9 @@ func (c *AuthMiddleware) VerifyJWT(authToken string) (int, error) {
 
 // IsAuthorized
 func (c *AuthMiddleware) IsAuthorized(next func(userID int, w http.ResponseWriter, r *http.Request)) http.Handler {
+	done := c.telemetry.NewTiming("auth.is_auth")
+	defer done()
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authToken := r.Header.Get("Authorization")
 		userID, err := c.VerifyJWT(authToken)

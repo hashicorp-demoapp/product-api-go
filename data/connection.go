@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	"github.com/hashicorp-demoapp/product-api-go/data/model"
+	"github.com/hashicorp-demoapp/product-api-go/telemetry"
+
 	//"database/sql"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -28,21 +30,40 @@ type Connection interface {
 }
 
 type PostgresSQL struct {
-	db *sqlx.DB
+	telemetry *telemetry.Telemetry
+	db        *sqlx.DB
 }
 
 // New creates a new connection to the database
-func New(connection string) (Connection, error) {
+func New(t *telemetry.Telemetry, connection string) (Connection, error) {
+	t.AddMeasure("db.is_connected")
+	t.AddMeasure("db.get_coffees")
+	t.AddMeasure("db.get_ingredients_for_coffee")
+	t.AddMeasure("db.create_user")
+	t.AddMeasure("db.auth_user")
+	t.AddMeasure("db.create_token")
+	t.AddMeasure("db.get_token")
+	t.AddMeasure("db.delete_token")
+	t.AddMeasure("db.get_orders")
+	t.AddMeasure("db.create_order")
+	t.AddMeasure("db.update_order")
+	t.AddMeasure("db.delete_order")
+	t.AddMeasure("db.create_coffee")
+	t.AddMeasure("db.upsert_coffee_ingredient")
+
 	db, err := sqlx.Connect("postgres", connection)
 	if err != nil {
 		return nil, err
 	}
 
-	return &PostgresSQL{db}, nil
+	return &PostgresSQL{t, db}, nil
 }
 
 // IsConnected checks the connection to the database and returns an error if not connected
 func (c *PostgresSQL) IsConnected() (bool, error) {
+	done := c.telemetry.NewTiming("db.is_connected")
+	defer done()
+
 	err := c.db.Ping()
 	if err != nil {
 		return false, err
@@ -53,6 +74,9 @@ func (c *PostgresSQL) IsConnected() (bool, error) {
 
 // GetCoffees returns all coffees from the database
 func (c *PostgresSQL) GetCoffees(coffeeid *int) (model.Coffees, error) {
+	done := c.telemetry.NewTiming("db.get_coffees")
+	defer done()
+
 	cos := model.Coffees{}
 
 	if coffeeid != nil {
@@ -83,6 +107,9 @@ func (c *PostgresSQL) GetCoffees(coffeeid *int) (model.Coffees, error) {
 
 // GetIngredientsForCoffee get the ingredients for the given coffeeid
 func (c *PostgresSQL) GetIngredientsForCoffee(coffeeid int) (model.Ingredients, error) {
+	done := c.telemetry.NewTiming("db.get_ingredients_for_coffee")
+	defer done()
+
 	is := []model.Ingredient{}
 
 	err := c.db.Select(&is,
@@ -100,6 +127,9 @@ func (c *PostgresSQL) GetIngredientsForCoffee(coffeeid int) (model.Ingredients, 
 
 // CreateUser creates a new user
 func (c *PostgresSQL) CreateUser(username string, password string) (model.User, error) {
+	done := c.telemetry.NewTiming("db.create_user")
+	defer done()
+
 	u := model.User{}
 
 	rows, err := c.db.NamedQuery(
@@ -126,6 +156,9 @@ func (c *PostgresSQL) CreateUser(username string, password string) (model.User, 
 
 // AuthUser checks whether username and password matches
 func (c *PostgresSQL) AuthUser(username string, password string) (model.User, error) {
+	done := c.telemetry.NewTiming("db.auth_user")
+	defer done()
+
 	us := []model.User{}
 
 	err := c.db.Select(&us,
@@ -147,6 +180,9 @@ func (c *PostgresSQL) AuthUser(username string, password string) (model.User, er
 
 // CreateToken creates a new token
 func (c *PostgresSQL) CreateToken(userID int) (model.Token, error) {
+	done := c.telemetry.NewTiming("db.create_token")
+	defer done()
+
 	token := model.Token{}
 
 	rows, err := c.db.NamedQuery(
@@ -172,6 +208,9 @@ func (c *PostgresSQL) CreateToken(userID int) (model.Token, error) {
 
 // GetToken checks whether token exists
 func (c *PostgresSQL) GetToken(tokenID int, userID int) (model.Token, error) {
+	done := c.telemetry.NewTiming("db.get_token")
+	defer done()
+
 	token := []model.Token{}
 
 	err := c.db.Select(&token,
@@ -192,6 +231,9 @@ func (c *PostgresSQL) GetToken(tokenID int, userID int) (model.Token, error) {
 
 // DeleteToken deletes an existing token in the database
 func (c *PostgresSQL) DeleteToken(tokenID int, userID int) error {
+	done := c.telemetry.NewTiming("db.delete_token")
+	defer done()
+
 	tx := c.db.MustBegin()
 
 	_, err := tx.NamedExec(
@@ -215,6 +257,9 @@ func (c *PostgresSQL) DeleteToken(tokenID int, userID int) error {
 
 // GetOrders returns orders from the database
 func (c *PostgresSQL) GetOrders(userID int, orderID *int) (model.Orders, error) {
+	done := c.telemetry.NewTiming("db.get_orders")
+	defer done()
+
 	orders := model.Orders{}
 
 	if orderID != nil {
@@ -270,6 +315,9 @@ func (c *PostgresSQL) GetOrders(userID int, orderID *int) (model.Orders, error) 
 
 // CreateOrder creates a new order in the database
 func (c *PostgresSQL) CreateOrder(userID int, orderItems []model.OrderItems) (model.Order, error) {
+	done := c.telemetry.NewTiming("db.create_order")
+	defer done()
+
 	tx := c.db.MustBegin()
 
 	o := model.Order{}
@@ -324,6 +372,9 @@ func (c *PostgresSQL) CreateOrder(userID int, orderItems []model.OrderItems) (mo
 
 // UpdateOrder updates an existing order in the database
 func (c *PostgresSQL) UpdateOrder(userID int, orderID int, orderItems []model.OrderItems) (model.Order, error) {
+	done := c.telemetry.NewTiming("db.update_order")
+	defer done()
+
 	tx := c.db.MustBegin()
 
 	o := model.Order{}
@@ -390,6 +441,9 @@ func (c *PostgresSQL) UpdateOrder(userID int, orderID int, orderItems []model.Or
 
 // DeleteOrder deletes an existing order in the database
 func (c *PostgresSQL) DeleteOrder(userID int, orderID int) error {
+	done := c.telemetry.NewTiming("db.delete_order")
+	defer done()
+
 	tx := c.db.MustBegin()
 
 	// remove existing items from order
@@ -424,6 +478,9 @@ func (c *PostgresSQL) DeleteOrder(userID int, orderID int) error {
 
 // CreateCoffee creates a new coffee
 func (c *PostgresSQL) CreateCoffee(coffee model.Coffee) (model.Coffee, error) {
+	done := c.telemetry.NewTiming("db.create_coffee")
+	defer done()
+
 	m := model.Coffee{}
 
 	rows, err := c.db.NamedQuery(
@@ -453,6 +510,9 @@ func (c *PostgresSQL) CreateCoffee(coffee model.Coffee) (model.Coffee, error) {
 
 // UpsertCoffeeIngredient upserts a new coffee ingredient
 func (c *PostgresSQL) UpsertCoffeeIngredient(coffee model.Coffee, ingredient model.Ingredient) (model.CoffeeIngredient, error) {
+	done := c.telemetry.NewTiming("db.upsert_coffee_ingredient")
+	defer done()
+
 	i := model.CoffeeIngredient{}
 
 	rows, err := c.db.NamedQuery(

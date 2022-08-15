@@ -8,6 +8,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/hashicorp-demoapp/product-api-go/data"
+	"github.com/hashicorp-demoapp/product-api-go/telemetry"
 	"github.com/hashicorp/go-hclog"
 )
 
@@ -15,8 +16,9 @@ const jwtSecret = "test"
 
 // User -
 type User struct {
-	con data.Connection
-	log hclog.Logger
+	log       hclog.Logger
+	telemetry *telemetry.Telemetry
+	con       data.Connection
 }
 
 // AuthStruct -
@@ -33,8 +35,14 @@ type AuthResponse struct {
 }
 
 // NewUser -
-func NewUser(con data.Connection, l hclog.Logger) *User {
-	return &User{con, l}
+func NewUser(t *telemetry.Telemetry, l hclog.Logger, con data.Connection) *User {
+	t.AddMeasure("user.signup")
+	t.AddMeasure("user.signin")
+	t.AddMeasure("user.generate_jwt_token")
+	t.AddMeasure("user.invalidate_jwt_token")
+	t.AddMeasure("user.signout")
+
+	return &User{l, t, con}
 }
 
 func (c *User) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
@@ -45,6 +53,9 @@ func (c *User) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 // SignUp registers a new user and returns a JWT token
 // only restriction is username must be unique
 func (c *User) SignUp(rw http.ResponseWriter, r *http.Request) {
+	done := c.telemetry.NewTiming("user.signup")
+	defer done()
+
 	c.log.Info("Handle User | signup")
 
 	body := AuthStruct{}
@@ -83,6 +94,9 @@ func (c *User) SignUp(rw http.ResponseWriter, r *http.Request) {
 
 // SignIn signs in a user and returns a JWT token
 func (c *User) SignIn(rw http.ResponseWriter, r *http.Request) {
+	done := c.telemetry.NewTiming("user.signin")
+	defer done()
+
 	c.log.Info("Handle User | signin")
 
 	body := AuthStruct{}
@@ -116,6 +130,9 @@ func (c *User) SignIn(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (c *User) generateJWTToken(userID int, username string) (string, error) {
+	done := c.telemetry.NewTiming("user.generate_jwt_token")
+	defer done()
+
 	t, err := c.con.CreateToken(userID)
 	if err != nil {
 		return "", err
@@ -131,6 +148,9 @@ func (c *User) generateJWTToken(userID int, username string) (string, error) {
 }
 
 func (c *User) invalidateJWTToken(authToken string) error {
+	done := c.telemetry.NewTiming("user.invalidate_jwt_token")
+	defer done()
+
 	tokenID, userID, err := ExtractJWT(authToken)
 	if err != nil {
 		return err
@@ -143,6 +163,9 @@ func (c *User) invalidateJWTToken(authToken string) error {
 
 // SignOut signs out a user and invalidates a JWT token
 func (c *User) SignOut(rw http.ResponseWriter, r *http.Request) {
+	done := c.telemetry.NewTiming("user.signout")
+	defer done()
+
 	c.log.Info("Handle User | signout")
 
 	authToken := r.Header.Get("Authorization")

@@ -9,18 +9,22 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/hashicorp-demoapp/product-api-go/data"
 	"github.com/hashicorp-demoapp/product-api-go/data/model"
+	"github.com/hashicorp-demoapp/product-api-go/telemetry"
 	"github.com/hashicorp/go-hclog"
 )
 
 // Coffee -
 type Coffee struct {
-	con data.Connection
-	log hclog.Logger
+	log       hclog.Logger
+	telemetry *telemetry.Telemetry
+	con       data.Connection
 }
 
 // NewCoffee
-func NewCoffee(con data.Connection, l hclog.Logger) *Coffee {
-	return &Coffee{con, l}
+func NewCoffee(t *telemetry.Telemetry, l hclog.Logger, con data.Connection) *Coffee {
+	t.AddMeasure("coffee.create_coffee")
+
+	return &Coffee{l, t, con}
 }
 
 func (c *Coffee) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
@@ -59,6 +63,9 @@ func (c *Coffee) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
 // CreateCoffee creates a new coffee
 func (c *Coffee) CreateCoffee(_ int, rw http.ResponseWriter, r *http.Request) {
+	done := c.telemetry.NewTiming("coffee.create_coffee")
+	defer done()
+
 	c.log.Info("Handle Coffee | CreateCoffee")
 
 	body := model.Coffee{}

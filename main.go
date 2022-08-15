@@ -70,7 +70,7 @@ func main() {
 	t := telemetry.New(conf.MetricsAddress)
 
 	// load the db connection
-	db, err := retryDBUntilReady()
+	db, err := retryDBUntilReady(t)
 	if err != nil {
 		logger.Error("Timeout waiting for database connection")
 		os.Exit(1)
@@ -86,28 +86,28 @@ func main() {
 		AllowedHeaders: []string{"Accept", "content-type", "Content-Length", "Accept-Encoding", "X-CSRF-Token", "Authorization"},
 	}).Handler)
 
-	authMiddleware := handlers.NewAuthMiddleware(db, logger)
+	authMiddleware := handlers.NewAuthMiddleware(t, logger, db)
 
 	healthHandler := handlers.NewHealth(t, logger, db)
 	r.Handle("/health", healthHandler).Methods("GET")
 	r.HandleFunc("/health/livez", healthHandler.Liveness).Methods("GET")
 	r.HandleFunc("/health/readyz", healthHandler.Readiness).Methods("GET")
 
-	coffeeHandler := handlers.NewCoffee(db, logger)
+	coffeeHandler := handlers.NewCoffee(t, logger, db)
 	r.Handle("/coffees", coffeeHandler).Methods("GET")
 	r.Handle("/coffees/{id:[0-9]+}", coffeeHandler).Methods("GET")
 	r.Handle("/coffees", authMiddleware.IsAuthorized(coffeeHandler.CreateCoffee)).Methods("POST")
 
-	ingredientsHandler := handlers.NewIngredients(db, logger)
+	ingredientsHandler := handlers.NewIngredients(t, logger, db)
 	r.Handle("/coffees/{id:[0-9]+}/ingredients", ingredientsHandler).Methods("GET")
 	r.Handle("/coffees/{id:[0-9]+}/ingredients", authMiddleware.IsAuthorized(ingredientsHandler.CreateCoffeeIngredient)).Methods("POST")
 
-	userHandler := handlers.NewUser(db, logger)
+	userHandler := handlers.NewUser(t, logger, db)
 	r.HandleFunc("/signup", userHandler.SignUp).Methods("POST")
 	r.HandleFunc("/signin", userHandler.SignIn).Methods("POST")
 	r.HandleFunc("/signout", userHandler.SignOut).Methods("POST")
 
-	orderHandler := handlers.NewOrder(db, logger)
+	orderHandler := handlers.NewOrder(t, logger, db)
 	r.Handle("/orders", authMiddleware.IsAuthorized(orderHandler.GetUserOrders)).Methods("GET")
 	r.Handle("/orders", authMiddleware.IsAuthorized(orderHandler.CreateOrder)).Methods("POST")
 	r.Handle("/orders/{id:[0-9]+}", authMiddleware.IsAuthorized(orderHandler.GetUserOrder)).Methods("GET")
@@ -124,13 +124,13 @@ func main() {
 // retryDBUntilReady keeps retrying the database connection
 // when running the application on a scheduler it is possible that the app will come up before
 // the database, this can cause the app to go into a CrashLoopBackoff cycle
-func retryDBUntilReady() (data.Connection, error) {
+func retryDBUntilReady(t *telemetry.Telemetry) (data.Connection, error) {
 	st := time.Now()
 	dt := 1 * time.Second  // this should be an exponential backoff
 	mt := 60 * time.Second // max time to wait of the DB connection
 
 	for {
-		db, err := data.New(conf.DBConnection)
+		db, err := data.New(t, conf.DBConnection)
 		if err == nil {
 			return db, nil
 		}

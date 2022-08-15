@@ -9,18 +9,26 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/hashicorp-demoapp/product-api-go/data"
 	"github.com/hashicorp-demoapp/product-api-go/data/model"
+	"github.com/hashicorp-demoapp/product-api-go/telemetry"
 	"github.com/hashicorp/go-hclog"
 )
 
 // Order -
 type Order struct {
-	con data.Connection
-	log hclog.Logger
+	log       hclog.Logger
+	telemetry *telemetry.Telemetry
+	con       data.Connection
 }
 
 // NewOrder -
-func NewOrder(con data.Connection, l hclog.Logger) *Order {
-	return &Order{con, l}
+func NewOrder(t *telemetry.Telemetry, l hclog.Logger, con data.Connection) *Order {
+	t.AddMeasure("order.get_user_orders")
+	t.AddMeasure("order.create_order")
+	t.AddMeasure("order.get_user_order")
+	t.AddMeasure("order.update_order")
+	t.AddMeasure("order.delete_order")
+
+	return &Order{l, t, con}
 }
 
 func (c *Order) ServeHTTP(userID int, rw http.ResponseWriter, r *http.Request) {
@@ -30,6 +38,9 @@ func (c *Order) ServeHTTP(userID int, rw http.ResponseWriter, r *http.Request) {
 
 // GetUserOrders gets all user orders for a specific user
 func (c *Order) GetUserOrders(userID int, rw http.ResponseWriter, r *http.Request) {
+	done := c.telemetry.NewTiming("order.get_user_orders")
+	defer done()
+
 	c.log.Info("Handle Orders | GetUserOrders")
 
 	orders, err := c.con.GetOrders(userID, nil)
@@ -51,6 +62,9 @@ func (c *Order) GetUserOrders(userID int, rw http.ResponseWriter, r *http.Reques
 
 // CreateOrder creates a new order
 func (c *Order) CreateOrder(userID int, rw http.ResponseWriter, r *http.Request) {
+	done := c.telemetry.NewTiming("order.create_order")
+	defer done()
+
 	c.log.Info("Handle Orders | CreateOrder")
 
 	body := []model.OrderItems{}
@@ -80,6 +94,9 @@ func (c *Order) CreateOrder(userID int, rw http.ResponseWriter, r *http.Request)
 
 // GetUserOrder gets a specific user order
 func (c *Order) GetUserOrder(userID int, rw http.ResponseWriter, r *http.Request) {
+	done := c.telemetry.NewTiming("order.get_user_order")
+	defer done()
+
 	c.log.Info("Handle Orders | GetUserOrder")
 
 	vars := mux.Vars(r)
@@ -116,6 +133,9 @@ func (c *Order) GetUserOrder(userID int, rw http.ResponseWriter, r *http.Request
 
 // UpdateOrder updates an order
 func (c *Order) UpdateOrder(userID int, rw http.ResponseWriter, r *http.Request) {
+	done := c.telemetry.NewTiming("order.update_order")
+	defer done()
+
 	c.log.Info("Handle Orders | UpdateOrder")
 
 	// Get orderID
@@ -154,6 +174,9 @@ func (c *Order) UpdateOrder(userID int, rw http.ResponseWriter, r *http.Request)
 
 // DeleteOrder deletes a user order
 func (c *Order) DeleteOrder(userID int, rw http.ResponseWriter, r *http.Request) {
+	done := c.telemetry.NewTiming("order.delete_order")
+	defer done()
+
 	c.log.Info("Handle Orders | DeleteOrder")
 
 	vars := mux.Vars(r)

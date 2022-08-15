@@ -20,7 +20,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	go.opentelemetry.io/otel v0.2.0
 	go.opentelemetry.io/otel/exporter/metric/prometheus v0.2.0
-	golang.org/x/sys v0.0.0-20191210023423-ac6580df4449 // indirect
+	golang.org/x/sys v0.0.0-20220811171246-fbc7d0a398ab // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
 )
 
