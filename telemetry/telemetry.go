@@ -6,17 +6,18 @@ import (
 	"net/http"
 	"time"
 
-	"go.opentelemetry.io/otel/api/global"
-	api "go.opentelemetry.io/otel/api/metric"
 	"go.opentelemetry.io/otel/exporter/metric/prometheus"
+	api "go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/metric/global"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/metric/batcher/defaultkeys"
-	"go.opentelemetry.io/otel/sdk/metric/controller/push"
+	controller "go.opentelemetry.io/otel/sdk/metric/controller/basic"
+
 	"go.opentelemetry.io/otel/sdk/metric/selector/simple"
 )
 
 type Telemetry struct {
-	pusher   *push.Controller
+	pusher   *controller.Controller
 	meter    api.Meter
 	measures map[string]*api.Float64Measure
 	counters map[string]*api.Float64Counter
@@ -31,7 +32,7 @@ func New(bind_address string) *Telemetry {
 	}
 
 	batcher := defaultkeys.New(selector, sdkmetric.NewDefaultLabelEncoder(), false)
-	pusher := push.New(batcher, exporter, time.Second)
+	pusher := controller.New(batcher, exporter, time.Second)
 	pusher.Start()
 
 	go func() {

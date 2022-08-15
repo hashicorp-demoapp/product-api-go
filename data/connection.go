@@ -5,6 +5,10 @@ import (
 	"fmt"
 
 	"github.com/hashicorp-demoapp/product-api-go/data/model"
+	"github.com/uptrace/opentelemetry-go-extra/otelsqlx"
+	semconv "go.opentelemetry.io/otel/semconv/v1.10.0"
+
+
 	//"database/sql"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -33,7 +37,7 @@ type PostgresSQL struct {
 
 // New creates a new connection to the database
 func New(connection string) (Connection, error) {
-	db, err := sqlx.Connect("postgres", connection)
+	db, err := otelsqlx.Connect("postgres", connection, .otelsql.WithAttributes(semconv.DBSystemPostgreSQL))
 	if err != nil {
 		return nil, err
 	}
