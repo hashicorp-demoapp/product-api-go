@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp-demoapp/product-api-go/data/model"
 	"github.com/hashicorp-demoapp/product-api-go/telemetry"
+	"github.com/opentracing/opentracing-go/log"
 
 	//"database/sql"
 	"github.com/jmoiron/sqlx"
@@ -74,6 +75,15 @@ func (c *PostgresSQL) IsConnected() (bool, error) {
 
 // GetCoffees returns all coffees from the database
 func (c *PostgresSQL) GetCoffees(coffeeid *int) (model.Coffees, error) {
+	span := c.telemetry.Tracer.StartSpan("db.get_coffees")
+	defer span.Finish()
+
+	span.LogFields(log.String("db.system", "postgresql"))
+	span.LogFields(
+		log.String("event", "db.get_coffees"),
+		log.String("value", "start"),
+	)
+
 	done := c.telemetry.NewTiming("db.get_coffees")
 	defer done()
 
@@ -101,6 +111,11 @@ func (c *PostgresSQL) GetCoffees(coffeeid *int) (model.Coffees, error) {
 
 		cos[n].Ingredients = i
 	}
+
+	span.LogFields(
+		log.String("event", "db.get_coffees"),
+		log.String("value", "finish"),
+	)
 
 	return cos, nil
 }
