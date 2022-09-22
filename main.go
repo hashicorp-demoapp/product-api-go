@@ -1,6 +1,7 @@
 package main
 
 import (
+	"math"
 	"net/http"
 	"os"
 	"time"
@@ -19,9 +20,11 @@ import (
 
 // Config format for application
 type Config struct {
-	DBConnection   string `json:"db_connection"`
-	BindAddress    string `json:"bind_address"`
-	MetricsAddress string `json:"metrics_address"`
+	DBConnection   string  `json:"db_connection"`
+	BindAddress    string  `json:"bind_address"`
+	MetricsAddress string  `json:"metrics_address"`
+	MaxRetries     int     `json:"max_retries"`
+	BackoffExpBase float64 `json:"backoff_exp_base"`
 }
 
 var conf *Config
@@ -31,6 +34,8 @@ var configFile = env.String("CONFIG_FILE", false, "./conf.json", "Path to JSON e
 var dbConnection = env.String("DB_CONNECTION", false, "", "db connection string")
 var bindAddress = env.String("BIND_ADDRESS", false, "", "Bind address")
 var metricsAddress = env.String("METRICS_ADDRESS", false, "", "Metrics address")
+var maxRetries = env.Int("MAX_RETRIES", false, 60, "Maximum number of connection retries")
+var backoffExpBase = env.Float64("BACKOFF_EXP_BASE", false, 1, "Exponential base number to calculate the backoff")
 
 const jwtSecret = "test"
 
@@ -54,6 +59,8 @@ func main() {
 		DBConnection:   *dbConnection,
 		BindAddress:    *bindAddress,
 		MetricsAddress: *metricsAddress,
+		MaxRetries:     *maxRetries,
+		BackoffExpBase: *backoffExpBase,
 	}
 
 	// load the config, unless provided by env
@@ -125,9 +132,12 @@ func main() {
 // when running the application on a scheduler it is possible that the app will come up before
 // the database, this can cause the app to go into a CrashLoopBackoff cycle
 func retryDBUntilReady() (data.Connection, error) {
-	st := time.Now()
-	dt := 1 * time.Second  // this should be an exponential backoff
-	mt := 60 * time.Second // max time to wait of the DB connection
+	maxRetries := conf.MaxRetries
+	backoffExpBase := conf.BackoffExpBase
+	dt := 0
+
+	retries := 0
+	backoff := time.Duration(0) // backoff before attempting to conection
 
 	for {
 		db, err := data.New(conf.DBConnection)
@@ -137,13 +147,16 @@ func retryDBUntilReady() (data.Connection, error) {
 
 		logger.Error("Unable to connect to database", "error", err)
 
-		// check if max time has elapsed
-		if time.Now().Sub(st) > mt {
+		// check if current retry reaches the max number of allowed retries
+		if retries > maxRetries {
 			return nil, err
 		}
 
 		// retry
-		time.Sleep(dt)
+		retries++
+		dt = int(math.Pow(backoffExpBase, float64(retries)))
+		backoff = time.Duration(dt) * time.Second
+		time.Sleep(backoff)
 	}
 }
 
