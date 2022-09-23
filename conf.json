@@ -1,5 +1,7 @@
 {
-  "db_connection": "host=localhost port=15432 user=postgres password=password dbname=products sslmode=disable",
+  "db_connection": "host=localhost port=15432 user=postgres password=password dbname=products sslmode=disable connect_timeout=10 ",
   "bind_address": "localhost:9090",
-  "metrics_address": "localhost:9102"
+  "metrics_address": "localhost:9102",
+  "max_retries": 60,
+  "backoff_exponential_base": 1
 }
