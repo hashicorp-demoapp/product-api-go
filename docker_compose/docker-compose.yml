@@ -1,7 +1,7 @@
 version: '3.7'
 services:
   api:
-    image: "hashicorpdemoapp/product-api:v0.0.22"
+    image: "hashicorpdemoapp/product-api:v0.0.23"
     ports:
       - "19090:9090"
     volumes:

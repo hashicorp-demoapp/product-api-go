@@ -1,6 +1,6 @@
 CONTAINER_NAME=hashicorpdemoapp/product-api
 DB_CONTAINER_NAME=hashicorpdemoapp/product-api-db
-CONTAINER_VERSION=v0.0.22
+CONTAINER_VERSION=v0.0.23
 
 test_functional:
 	shipyard run ./blueprint
@@ -26,7 +26,7 @@ build_arm64:
 	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o bin/arm64/product-api
 
 build_docker: build_linux build_arm64
-	docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+	docker run --platform linux/amd64 --rm --privileged multiarch/qemu-user-static --reset -p yes
 	docker buildx create --name multi || true
 	docker buildx use multi
 	docker buildx inspect --bootstrap
