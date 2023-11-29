@@ -25,6 +25,7 @@ type Config struct {
 	MetricsAddress         string  `json:"metrics_address"`
 	MaxRetries             int     `json:"max_retries"`
 	BackoffExponentialBase float64 `json:"backoff_exponential_base"`
+	ErrorRate              int     `json:"error_rate"`
 }
 
 var conf *Config
@@ -36,6 +37,7 @@ var bindAddress = env.String("BIND_ADDRESS", false, "", "Bind address")
 var metricsAddress = env.String("METRICS_ADDRESS", false, "", "Metrics address")
 var maxRetries = env.Int("MAX_RETRIES", false, 60, "Maximum number of connection retries")
 var backoffExponentialBase = env.Float64("BACKOFF_EXPONENTIAL_BASE", false, 1, "Exponential base number to calculate the backoff")
+var errorRate = env.Int("ERROR_RATE", false, 0, "Integer between 0 and 100 that represents how often the service should return 500 error code")
 
 const jwtSecret = "test"
 
@@ -61,6 +63,7 @@ func main() {
 		MetricsAddress:         *metricsAddress,
 		MaxRetries:             *maxRetries,
 		BackoffExponentialBase: *backoffExponentialBase,
+		ErrorRate:              *errorRate,
 	}
 
 	// load the config, unless provided by env
@@ -94,6 +97,8 @@ func main() {
 	}).Handler)
 
 	authMiddleware := handlers.NewAuthMiddleware(db, logger)
+	errorMiddleware := handlers.NewErrorMiddleware(conf.ErrorRate, logger)
+	r.Use(errorMiddleware.Middleware)
 
 	healthHandler := handlers.NewHealth(t, logger, db)
 	r.Handle("/health", healthHandler).Methods("GET")
