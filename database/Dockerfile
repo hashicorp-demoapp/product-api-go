@@ -1,4 +1,4 @@
-FROM postgres:11.6 as base
+FROM postgres:16.4 as base
 
 FROM base AS image-amd64
 
