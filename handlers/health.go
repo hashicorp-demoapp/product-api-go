@@ -37,7 +37,7 @@ func (h *Health) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(rw, "error %s", err)
 	}
 
-	fmt.Fprintf(rw, "%s", "not ok")
+	fmt.Fprintf(rw, "%s", "ok")
 }
 
 // Liveness endpoint for health checks indicates server has started
